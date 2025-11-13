@@ -1,0 +1,86 @@
+/* General page setup */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: rgba(8, 8, 34, 0.95);
+  color: #fff;
+}
+
+/* Navbar styling */
+.custom-navbar {
+  background-color: rgba(4, 4, 54, 0.95) !important;
+  padding: 15px 30px;
+}
+
+.navbar-brand {
+  color: white !important;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar-nav .nav-link {
+  color: white !important;
+  margin: 0 15px;
+  font-weight: 500;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #0dcaf0 !important;
+}
+
+.btn-outline-light:hover {
+  background-color: white !important;
+  color: #000 !important;
+}
+
+/* Hero section */
+.hero-section {
+  background: linear-gradient(
+      rgba(4, 4, 54, 0.8),
+      rgba(4, 4, 54, 0.8)
+    ),
+    url('C:\Users\Dell\OneDrive\Pictures\Screenshots\Screenshot 2025-11-05 202832.png') no-repeat center center/cover;
+  height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hero-section h1 {
+  font-size: 3rem;
+  letter-spacing: 1px;
+}
+
+.hero-section p {
+  color: #ddd;
+  font-size: 1.2rem;
+}
+
+/* About section — ensures hero gradient doesn’t overlap */
+.about-section {
+  background: rgba(8, 8, 34, 0.98);
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.about-section h2 {
+  color: #0dcaf0;
+  margin-bottom: 25px;
+}
+
+.about-section p {
+  color: #e0e0e0;
+  line-height: 1.8;
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.modal-content {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.modal-header {
+  border-bottom: none;
+}

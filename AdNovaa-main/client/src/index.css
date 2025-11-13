@@ -11,3 +11,28 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* === Signup Page Styles === */
+.signup-container {
+  max-width: 500px;
+  margin: 80px auto;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px;
+  border-radius: 10px;
+  color: white;
+}
+
+body {
+  background: linear-gradient(135deg, #080822, #040436);
+  min-height: 100vh;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 5px 5px 0 0;
+}
+
+.nav-tabs .nav-link {
+  color: white;
+}
+
