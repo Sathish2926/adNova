@@ -283,3 +283,56 @@ html, body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* SIGNUP POPUP UI */
+.signup-popup {
+  background: rgba(8, 8, 34, 0.9);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 20px 30px;
+  color: white;
+}
+
+/* Tabs */
+.signup-tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  font-weight: 600;
+  color: white;
+  transition: 0.3s;
+}
+
+.signup-tab.active {
+  background: #0dcaf0;
+  color: black;
+}
+
+/* Instagram Button */
+.instagram-btn {
+  width: 100%;
+  padding: 12px;
+  background: #e1306c;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+}
+
+/* Form fields */
+.signup-form input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.signup-form input::placeholder {
+  color: #ccc;
+}
+.modal-content input::placeholder {
+  color: #cbd5e1 !important; /* light gray */
+  opacity: 1;
+}
