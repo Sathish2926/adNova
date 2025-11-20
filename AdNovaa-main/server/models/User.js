@@ -1,20 +1,10 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  role: { type: String, required: true, enum: ["influencer", "business"] },
-
-  // Common
+  name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-
-  // Influencer Fields
-  name: String,
-  phone: String,
-
-  // Business Fields
-  businessName: String,
-  ownerName: String,
-  contactNumber: String,
+  role: { type: String, enum: ["influencer", "business"], required: true },
 });
 
 export default mongoose.model("User", userSchema);
