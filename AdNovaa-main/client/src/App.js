@@ -1,15 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Signup from "./pages/InfluencerSignup";
 import Home from "./pages/home";
-
+import Business from "./pages/BusinessDashboard";
 
 function App() {
   return (
     <Router>
       <Routes>
          <Route path="/"element={<Home />} />
-      
+        <Route path="/BusinessDashboard" element={<Business />}/>
       </Routes>
     </Router>
   );
