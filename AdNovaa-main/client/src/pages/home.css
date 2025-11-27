@@ -2,15 +2,10 @@
    GLOBAL STYLING
 -----------------------------------*/
 body {
-  background: #040b25;
   color: white;
   font-family: "Poppins", sans-serif;
   margin: 0;
   padding: 0;
-}
-
-html, body {
-  height: 100%;
 }
 
 /* ---------------------------------
@@ -254,16 +249,17 @@ html, body {
       rgba(4, 4, 54, 0.8),
       rgba(4, 4, 54, 0.8)
     ),
-    url('c:\Users\Dell\OneDrive\Pictures\Screenshots\Screenshot 2025-11-05 202832.png') no-repeat center center/cover;
+    url('D:\adNova\AdNovaa-main\client\public\assets\images\Screenshot 2025-11-05 202832.png') no-repeat center center;
   background-size: cover;
   background-attachment: fixed;
 }
+
 .services-section {
   background: linear-gradient(
       rgba(4, 4, 54, 0.8),
       rgba(4, 4, 54, 0.8)
     ),
-    url('c:\Users\Dell\OneDrive\Pictures\Screenshots\Screenshot 2025-11-05 202832.png') center/cover no-repeat;
+    url('D:\adNova\AdNovaa-main\client\public\assets\images\Screenshot 2025-11-05 202832.png') center/cover no-repeat;
   background-attachment: fixed;
   color: #fff;
   padding: 80px 15px; 
