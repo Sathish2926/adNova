@@ -1,102 +1,55 @@
 import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
+import { useAuth } from "../contexts/AuthContext"; 
+import Navbar from "../components/navbar"; // <--- ADDED IMPORT
 import "./messages.css";
 
 const SOCKET_URL = "http://localhost:5000"; 
 const socket = io.connect(SOCKET_URL);
 
-// --- Encryption ---
 const SimpleCrypto = {
-  encrypt: (text, key) => {
-    try { return btoa(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('')); } 
-    catch (e) { return text; }
-  },
-  decrypt: (encoded, key) => {
-    try { return atob(encoded).split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join(''); } 
-    catch (e) { return "**Error**"; }
-  }
+  encrypt: (text, key) => { try { return btoa(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('')); } catch (e) { return text; } },
+  decrypt: (encoded, key) => { try { return atob(encoded).split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join(''); } catch (e) { return "**Error**"; } }
 };
 
 export default function Messages() {
-  const [user, setUser] = useState({ name: "", email: "", isLoggedIn: false });
+  const { name = "User", email = "", isLoggedIn } = useAuth();
+
   const [activeTab, setActiveTab] = useState("chats");
-  
   const [contacts, setContacts] = useState([]);
   const [requests, setRequests] = useState([]);
-
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const messagesEndRef = useRef(null);
 
-  // --- ROOM ID GENERATOR (Consistency is Key) ---
-  const generateRoomId = (email1, email2) => {
-    return [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
-  };
+  const generateRoomId = (email1, email2) => [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
 
-  // --- INITIALIZATION ---
   useEffect(() => {
-    if (user.isLoggedIn && user.email) {
-      const myEmail = user.email.toLowerCase();
+    if (isLoggedIn && email) {
+      const myEmail = email.toLowerCase();
       socket.emit("register_user", myEmail);
 
-      // 1. Load Requests
-      socket.on("existing_requests", (data) => {
-        const mapped = data.map(r => ({
-          id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp
-        }));
-        setRequests(mapped); // Replace list to prevent duplicates
-      });
-
-      // 2. Load Conversations (Contacts)
-      socket.on("existing_conversations", (data) => {
-        const mapped = data.map(c => ({
-          ...c, role: "connected"
-        }));
-        setContacts(mapped);
-      });
-
-      // 3. New Request Received
-      socket.on("receive_request", (data) => {
-        setRequests(prev => {
-          if (prev.some(r => r.email === data.email)) return prev;
-          return [{...data, id: data._id || data.id}, ...prev];
-        });
-      });
-
-      // 4. Request Accepted (I sent invite -> They accepted)
-      socket.on("request_accepted", (data) => {
-         updateContactToConnected(data);
-      });
-
-      // 5. Request Accepted Confirm (I accepted -> Update my UI)
-      socket.on("request_accepted_confirm", (data) => {
-         // This is redundant if we did optimistic update, but good for safety
-      });
-
-      // 6. Chat History Loaded
+      socket.on("existing_requests", (data) => setRequests(data.map(r => ({ id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp }))));
+      socket.on("existing_conversations", (data) => setContacts(data.map(c => ({ ...c, role: "connected" }))));
+      socket.on("receive_request", (data) => setRequests(prev => prev.some(r => r.email === data.email) ? prev : [{...data, id: data._id || data.id}, ...prev]));
+      socket.on("request_accepted", (data) => updateContactToConnected(data));
+      
       socket.on("chat_history", (history) => {
          if (currentChat) {
-             const roomId = generateRoomId(user.email, currentChat.email);
-             const cleanHistory = history.map(msg => ({
-                 ...msg,
-                 message: SimpleCrypto.decrypt(msg.message, roomId)
-             }));
-             setMessages(cleanHistory);
+             const roomId = generateRoomId(email, currentChat.email);
+             setMessages(history.map(msg => ({ ...msg, message: SimpleCrypto.decrypt(msg.message, roomId) })));
          }
       });
 
-      // 7. Receive Message (From me OR them)
       socket.on("receive_message", (data) => {
         if (currentChat) {
-           const roomId = generateRoomId(user.email, currentChat.email);
+           const roomId = generateRoomId(email, currentChat.email);
            if (data.room === roomId) {
               const text = SimpleCrypto.decrypt(data.message, roomId);
               setMessages(prev => {
-                  // Prevent strict duplicates
                   if(prev.length > 0) {
                       const last = prev[prev.length - 1];
                       if(last.time === data.time && last.message === text) return prev;
@@ -107,81 +60,37 @@ export default function Messages() {
         }
       });
     }
-
     return () => {
       socket.off("existing_requests");
       socket.off("existing_conversations");
       socket.off("receive_request");
       socket.off("request_accepted");
-      socket.off("request_accepted_confirm");
       socket.off("chat_history");
       socket.off("receive_message");
     };
-  }, [user.isLoggedIn, user.email, currentChat]);
+  }, [isLoggedIn, email, currentChat]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  // Helper to upgrade a contact status
   const updateContactToConnected = (data) => {
      setContacts(prev => {
          const newContact = {
-             id: data.conversationId || Date.now(),
-             name: data.name,
-             email: data.email,
-             avatar: data.name[0].toUpperCase(),
-             role: "connected",
-             lastMessage: "Conversation Started",
-             time: "Now"
+             id: data.conversationId || Date.now(), name: data.name, email: data.email,
+             avatar: (data.name && data.name[0]) ? data.name[0].toUpperCase() : "?",
+             role: "connected", lastMessage: "Conversation Started", time: "Now"
          };
-
-         // Replace the "pending" entry if it exists
-         const isPending = prev.find(c => c.email === data.email);
-         if (isPending) {
-             return prev.map(c => c.email === data.email ? newContact : c);
-         }
-         return [newContact, ...prev];
+         return [newContact, ...prev.filter(c => c.email !== data.email)];
      });
-
-     // IMPORTANT: If I am looking at this chat, update currentChat so the "Pending" banner disappears
-     if (currentChat && currentChat.email === data.email) {
-         setCurrentChat(prev => ({ ...prev, role: "connected" }));
-     }
-  };
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (user.email) {
-      const name = user.email.split("@")[0];
-      setUser({ ...user, name, isLoggedIn: true });
-    }
+     if (currentChat && currentChat.email === data.email) setCurrentChat(prev => ({ ...prev, role: "connected" }));
   };
 
   const sendInvite = (e) => {
     e.preventDefault();
     if (inviteEmail) {
       const targetEmail = inviteEmail.toLowerCase();
-      // Check if already exists
-      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) {
-          alert("Contact already exists or request pending.");
-          return;
-      }
-
-      socket.emit("send_request", {
-        to: targetEmail,
-        requestData: { name: user.name, email: user.email, time: "Now" }
-      });
-      
-      const pending = {
-          id: "temp_" + Date.now(),
-          name: targetEmail.split("@")[0],
-          email: targetEmail,
-          avatar: "⏳",
-          role: "pending",
-          lastMessage: "Invite Sent",
-          time: "Now"
-      };
+      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) { alert("Contact exists or pending."); return; }
+      socket.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
+      const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, avatar: "⏳", role: "pending", lastMessage: "Invite Sent", time: "Now" };
       setContacts(prev => [pending, ...prev]);
       setCurrentChat(pending);
       setInviteEmail("");
@@ -190,81 +99,48 @@ export default function Messages() {
   };
 
   const acceptRequest = (req) => {
-    // Notify Server
-    socket.emit("accept_request", {
-        requestId: req.id,
-        acceptorName: user.name,
-        acceptorEmail: user.email
-    });
-
-    // Optimistic: Add to contacts
-    const newContact = {
-      id: req.id,
-      name: req.name,
-      email: req.email,
-      avatar: req.name[0].toUpperCase(),
-      role: "connected",
-      lastMessage: "Conversation Started",
-      time: "Now"
-    };
+    socket.emit("accept_request", { requestId: req.id, acceptorName: name, acceptorEmail: email });
+    const newContact = { id: req.id, name: req.name, email: req.email, avatar: (req.name && req.name[0]) ? req.name[0].toUpperCase() : "?", role: "connected", lastMessage: "Conversation Started", time: "Now" };
     setContacts(prev => [newContact, ...prev]);
-    
-    // Remove from requests
     setRequests(prev => prev.filter(r => r.id !== req.id));
     setActiveTab("chats");
-    
-    // Open the chat immediately
     joinChat(newContact);
   };
 
   const joinChat = (contact) => {
     setCurrentChat(contact);
     setMessages([]); 
-    // Join room regardless of pending/connected to ensure listeners work for self-messages
-    const roomId = generateRoomId(user.email, contact.email);
-    socket.emit("join_room", roomId);
+    socket.emit("join_room", generateRoomId(email, contact.email));
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
     if (newMessage.trim() && currentChat && currentChat.role !== 'pending') {
-      const roomId = generateRoomId(user.email, currentChat.email);
+      const roomId = generateRoomId(email, currentChat.email);
       const encrypted = SimpleCrypto.encrypt(newMessage, roomId);
-      
-      const msgData = {
-        room: roomId,
-        author: user.name,
-        message: encrypted,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        participants: [user.email, currentChat.email] 
-      };
-
-      await socket.emit("send_message", msgData);
+      await socket.emit("send_message", { room: roomId, author: name, message: encrypted, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), participants: [email, currentChat.email] });
       setNewMessage("");
     }
   };
 
-  if (!user.isLoggedIn) return (
-    <div className="messaging-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
-      <div className="login-card">
-        <h2>AdNova Login</h2>
-        <form onSubmit={handleLogin}>
-          <input className="login-input" type="email" placeholder="Enter Email" onChange={e => setUser({...user, email: e.target.value})} required />
-          <button className="btn-accept">Login</button>
-        </form>
-      </div>
-    </div>
-  );
+  if (!isLoggedIn) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}><h2>Please log in.</h2></div>;
+
+  const safeName = name || "User";
+  const safeAvatar = safeName[0] ? safeName[0].toUpperCase() : "?";
 
   return (
+    <>
+    {/* 1. NAVBAR ADDED HERE */}
+    <Navbar />
+
     <div className="messaging-page">
       <div className="messaging-container">
         {/* SIDEBAR */}
         <div className="msg-sidebar">
           <div className="msg-header">
             <div className="user-profile">
-              <div className="avatar-circle">{user.name[0].toUpperCase()}</div>
-              <div className="user-info"><h4>{user.name}</h4><span className="user-email">{user.email}</span></div>
+              <div className="avatar-circle">{safeAvatar}</div>
+              <div className="user-info"><h4>{safeName}</h4><span className="user-email">{email}</span></div>
             </div>
           </div>
           <div className="sidebar-tabs">
@@ -295,7 +171,7 @@ export default function Messages() {
           </div>
 
           <div className="invite-section">
-            {!showInviteForm ? 
+            {!showInviteForm ?
               <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
               <form onSubmit={sendInvite} className="invite-form">
                 <input type="email" placeholder="Email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} autoFocus />
@@ -308,7 +184,7 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* CHAT */}
+        {/* CHAT AREA */}
         <div className="chat-area">
           {currentChat ? (
             <>
@@ -320,7 +196,7 @@ export default function Messages() {
               </div>
               <div className="messages-feed">
                 {messages.map((m, i) => (
-                  <div key={i} className={`message-wrapper ${m.author === user.name ? 'sent' : 'received'}`}>
+                  <div key={i} className={`message-wrapper ${m.author === name ? 'sent' : 'received'}`}>
                     <div className="message-bubble">{m.message}<div className="msg-time">{m.time}</div></div>
                   </div>
                 ))}
@@ -338,5 +214,6 @@ export default function Messages() {
         </div>
       </div>
     </div>
+    </>
   );
 }
