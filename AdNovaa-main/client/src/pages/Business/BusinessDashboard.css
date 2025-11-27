@@ -1,0 +1,4 @@
+/* minimal business styles */
+.bizdash-cover { min-height:220px; background-size:cover; background-position:center; border-radius:12px; padding:40px 20px; color:white; }
+.bizdash-logo { width:110px; height:110px; border-radius:12px; object-fit:cover; }
+.bizdash-profile-info { display:flex; gap:18px; align-items:center; }
