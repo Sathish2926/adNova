@@ -1,97 +1,94 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; 
+import { useAuth } from "../contexts/AuthContext"; // 1. Import useAuth
 
 // 🚨 CRITICAL: Assuming your backend is running locally on port 5000 
 // and the router is mounted under /api/auth
 const LOGIN_API_URL = "http://localhost:5000/api/auth/login"; 
 
 const LoginModal = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate(); 
-  
-  // 1. The Real API Communication Function
-  const loginUser = async (credentials) => {
-    try {
-      const response = await fetch(LOGIN_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const navigate = useNavigate(); 
+    const { login } = useAuth(); // 2. Get the login function from context
 
-      // Attempt to parse the response data regardless of status
-      const data = await response.json(); 
-
-      if (!response.ok) {
-        const errorMessage = data.message || `Login failed. Status: ${response.status}.`;
-        throw new Error(errorMessage);
-      }
-      
-      // SUCCESS PATH: Return the success state and the role
-      return { success: true, role: data.role }; 
-
-    } catch (error) {
-      console.error("API Login Error:", error.message);
-      return { success: false, message: error.message };
-    }
-  };
-
-  const closeBootstrapModal = () => {
-    try {
-        const modalElement = document.getElementById('loginModal');
-        // Check if Bootstrap's JS Modal class is available globally (window.bootstrap)
-        if (modalElement && window.bootstrap && window.bootstrap.Modal) {
-            // Get the existing modal instance or create a new one
-            const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
-            modal.hide();
-        } else {
-            console.warn("Bootstrap Modal JS not available. Cannot manually close modal.");
+    // Function to close the Bootstrap modal manually
+    const closeBootstrapModal = () => {
+        try {
+            const modalElement = document.getElementById('loginModal');
+            if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+                modal.hide();
+            }
+        } catch (err) {
+            console.error("Error closing modal:", err);
         }
-    } catch (err) {
-        console.error("Error closing modal:", err);
-    }
-  };
+    };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    
-    // Simple front-end validation
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
+    // The Real API Communication Function
+    const loginUser = async (credentials) => {
+        try {
+            const response = await fetch(LOGIN_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials),
+            });
 
-    const response = await loginUser({ email, password }); 
-    
-    // 🚨 FIX 1: Removed redundant/incorrect role declaration outside of the if block.
-    
-    if (response.success) {
-      const role = response.role; // Read role ONLY on success
+            const data = await response.json(); 
 
-      let dashboardPath = "/"; // Default fallback
+            if (!response.ok) {
+                const errorMessage = data.message || `Login failed. Status: ${response.status}.`;
+                throw new Error(errorMessage);
+            }
+            
+            // Expected Success Response: { success: true, role: '...', isProfileComplete: true/false }
+            // NOTE: You must update your backend to return userId and token!
+            return { 
+                success: true, 
+                role: data.role, 
+                isProfileComplete: data.isProfileComplete,
+                userId: data.userId || 'mock_user_id' // Ensure your backend returns this!
+            }; 
 
-      if (role === "business") {
-          // Use lowercase path for consistency, unless 'BusinessDashboard' is required by React Router
-          dashboardPath = "/BusinessDashboard"; 
-      } else if (role === "influencer") {
-          dashboardPath = "/influencer-dashboard";
-      }
-      
-      // 🚨 FIX 2: Manually close the modal before redirection.
-      // This is often required when using modals in React to prevent conflicts.
-      closeBootstrapModal(); 
+        } catch (error) {
+            console.error("API Login Error:", error.message);
+            return { success: false, message: error.message };
+        }
+    };
 
-      // 🚨 FIX 3: Redirect with replace: true to prevent back navigation.
-      navigate(dashboardPath, { replace: true });
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        
+        if (!email || !password) {
+            alert("Please enter both email and password.");
+            return;
+        }
 
-    } else {
-      // Show the specific error message returned from the API/try-catch
-      alert("Login failed: " + response.message);
-    }
-  };
+        const response = await loginUser({ email, password }); 
 
+        if (response.success) {
+            // 3. Update the global AuthContext state with user details
+            login(response);
+
+            // Determine the next destination path
+            let dashboardPath = "/"; 
+            if (response.isProfileComplete) {
+                dashboardPath = response.role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
+            } else {
+                // If profile is NOT complete, always redirect to setup page
+                dashboardPath = "/profile-setup"; 
+            }
+            
+            // Close modal before navigation
+            closeBootstrapModal(); 
+
+            // Redirect using replace: true
+            navigate(dashboardPath, { replace: true });
+
+        } else {
+            alert("Login failed: " + response.message);
+        }
+    };
   return (
     <div
       className="modal fade"

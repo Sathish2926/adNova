@@ -1,0 +1,22 @@
+/* Influencer CSS adapted from your file */
+.profile-wrapper-react { max-width:1200px; margin:2rem auto; padding:1rem; }
+.profile-section-react { display:flex; gap:24px; align-items:flex-start; }
+.profile-left-react { width:320px; }
+.pfp-area { display:flex; justify-content:center; }
+.pfp-box { width:150px; height:150px; border-radius:50%; background-size:cover; background-position:center; border:3px solid rgba(255,255,255,0.14); box-shadow:0 6px 20px rgba(0,0,0,0.45); cursor:pointer; }
+.name-react { font-size:1.25rem; margin-top:12px; }
+.cat-text-react, .loc-react { opacity:0.85; margin-top:6px; }
+.bio-react { margin-top:10px; opacity:0.9; line-height:1.45; }
+.counts-react { display:flex; gap:12px; justify-content:space-between; margin-top:12px; }
+.masonry-react { column-count:3; column-gap:16px; }
+@media(max-width:1200px){ .masonry-react{ column-count:2; } }
+@media(max-width:700px){ .masonry-react{ column-count:1; } }
+.post-tile { break-inside: avoid; margin-bottom:16px; background: rgba(255,255,255,0.04); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); position:relative; }
+.post-tile img { width:100%; display:block; object-fit:cover; height:100%; }
+.post-hover-react { position:absolute; left:0; right:0; bottom:0; padding:12px; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.6)); color:#fff; opacity:0; transform:translateY(8px); transition:all .22s; }
+.post-tile:hover .post-hover-react { opacity:1; transform:translateY(0); }
+.delete-btn-react { position:absolute; top:8px; right:8px; background:#ff4949; color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; }
+.post-form-overlay-react { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:3000; }
+.post-form-react { width:360px; background: rgba(0,0,0,0.6); padding:16px; border-radius:12px; border: 1px solid rgba(255,255,255,0.06); color:white; }
+.preview-react { width:100%; border-radius:8px; margin-top:8px; }
+.floating-edit-react { position:fixed; right:18px; bottom:18px; z-index:3000; background:#0dcaf0; color:#001; padding:10px 14px; border-radius:10px; border:none; font-weight:700; }
