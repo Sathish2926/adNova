@@ -1,0 +1,240 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: #030b25;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------
+   COVER SECTION
+------------------------------------------------*/
+.bizdash-cover {
+  width: 100%;
+  height: 280px;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 30px;
+}
+
+/* Upload cover button */
+.upload-cover-label {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255,255,255,0.15);
+  padding: 8px 14px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: 0.3s;
+}
+.upload-cover-label:hover {
+  background: rgba(255,255,255,0.25);
+}
+.upload-cover-label input {
+  display: none;
+}
+
+/* ---------------------------------------------
+   PROFILE SECTION
+------------------------------------------------*/
+.bizdash-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.logo-wrapper {
+  position: relative;
+}
+
+/* LOGO STYLE */
+.bizdash-logo {
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255,255,255,0.7);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+/* Upload logo button */
+.upload-logo-label {
+  position: absolute;
+  bottom: -12px;
+  left: 15%;
+  background: rgba(255,255,255,0.15);
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.upload-logo-label:hover {
+  background: rgba(255,255,255,0.25);
+}
+.upload-logo-label input {
+  display: none;
+}
+
+/* NAME & TAG */
+.profile-text h2 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+.profile-text p {
+  opacity: 0.8;
+}
+
+/* Editable fields */
+.edit-input,
+.edit-textarea {
+  background: rgba(255,255,255,0.12);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  width: 100%;
+  color: white;
+  outline: none;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.edit-input:focus,
+.edit-textarea:focus {
+  border-color: #0dcaf0;
+  background: rgba(255,255,255,0.18);
+}
+
+/* ---------------------------------------------
+   BUSINESS INFO CARD
+------------------------------------------------*/
+.bizdash-info-card {
+  background: rgba(255,255,255,0.05);
+  padding: 25px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 25px rgba(0,0,0,0.4);
+  transition: 0.3s;
+}
+.bizdash-info-card:hover {
+  background: rgba(255,255,255,0.09);
+}
+
+.bizdash-info-card h4 {
+  color: #0dcaf0;
+  margin-bottom: 15px;
+}
+
+.static-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* ---------------------------------------------
+   NEW POST CARD
+------------------------------------------------*/
+.new-post-card {
+  background: rgba(255,255,255,0.06);
+  padding: 20px;
+  border-radius: 18px;
+  backdrop-filter: blur(6px);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.file-upload {
+  margin-bottom: 10px;
+}
+
+/* ---------------------------------------------
+   POSTS GRID
+------------------------------------------------*/
+.masonry-grid {
+  column-count: 3;
+  column-gap: 18px;
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 18px;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.35s;
+}
+.masonry-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.45);
+}
+
+.masonry-item img {
+  width: 100%;
+  border-radius: inherit;
+  display: block;
+}
+
+/* Image hover caption */
+.post-hover {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  opacity: 0;
+  transition: 0.3s;
+}
+.masonry-item:hover .post-hover {
+  opacity: 1;
+}
+.post-hover h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.post-hover p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* ---------------------------------------------
+   FLOATING EDIT / SAVE BUTTON
+------------------------------------------------*/
+.floating-edit-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #0dcaf0;
+  color: black;
+  border: none;
+  padding: 14px 20px;
+  font-weight: 600;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 20px rgba(0,200,255,0.4);
+  cursor: pointer;
+  transition: 0.25s;
+  z-index: 999;
+}
+
+.floating-edit-btn:hover {
+  transform: scale(1.07);
+  box-shadow: 0 12px 25px rgba(0,200,255,0.55);
+}
