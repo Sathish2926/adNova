@@ -10,7 +10,6 @@ import ProfileSetup from "./components/ProfileSetup";
 import Messages from "./pages/Messages"; 
 import Marketplace from "./pages/MarketPlace";
 import PublicProfile from "./pages/PublicProfile"; // <--- NEW IMPORT
-import ResetPassword from "./pages/ResetPassword"; // <--- NEW IMPORT
 
 // --- Protected Route Component ---
 const ProtectedRoute = ({ element: Element }) => {
@@ -31,9 +30,6 @@ function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/profile-setup" element={<ProfileSetup userRole={role} userId={userId} />} />
-                
-                {/* --- Reset Password Route --- */}
-                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 
                 {/* --- Protected Routes --- */}
                 <Route path="/BusinessDashboard" element={<ProtectedRoute element={Business} />} />

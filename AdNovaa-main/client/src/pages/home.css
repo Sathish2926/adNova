@@ -181,7 +181,7 @@ body {
 -----------------------------------*/
 .services-section {
   padding: 80px 0;
-  background: linear-gradient(
+  /*background: linear-gradient(
       rgba(3, 11, 37, 0.9),
       rgba(3, 11, 37, 0.9)
     ),

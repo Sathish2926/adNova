@@ -8,9 +8,13 @@ import Business from "./pages/BusinessDashboard";
 import Influencer from "./pages/InfluencerDashboard";
 import ProfileSetup from "./components/ProfileSetup";
 import Messages from "./pages/Messages"; 
+<<<<<<< HEAD
 import Marketplace from "./pages/MarketPlace";
 import PublicProfile from "./pages/PublicProfile"; // <--- NEW IMPORT
+=======
+import Marketplace from "./pages/MarketPlace"; // <--- NEW IMPORT
 import ResetPassword from "./pages/ResetPassword"; // <--- NEW IMPORT
+>>>>>>> 09ea825edb711299bcd39059a06e6413a7766ba3
 
 // --- Protected Route Component ---
 const ProtectedRoute = ({ element: Element }) => {
