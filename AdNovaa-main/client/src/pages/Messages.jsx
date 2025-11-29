@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { useAuth } from "../contexts/AuthContext"; 
-import Navbar from "../components/navbar"; // <--- ADDED IMPORT
+import { useLocation, useNavigate } from "react-router-dom"; 
+import Navbar from "../components/navbar"; 
 import "./messages.css";
 
-const SOCKET_URL = "http://localhost:5000"; 
+const SOCKET_URL = "http://localhost:5000";
 const socket = io.connect(SOCKET_URL);
 
 const SimpleCrypto = {
@@ -14,6 +15,8 @@ const SimpleCrypto = {
 
 export default function Messages() {
   const { name = "User", email = "", isLoggedIn } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate(); // Added navigate hook
 
   const [activeTab, setActiveTab] = useState("chats");
   const [contacts, setContacts] = useState([]);
@@ -27,6 +30,35 @@ export default function Messages() {
 
   const generateRoomId = (email1, email2) => [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
 
+  // --- 1. HANDLE "INITIATE CHAT" (FIXED) ---
+  useEffect(() => {
+    if (location.state && location.state.initiateChat) {
+        const targetEmail = location.state.initiateChat.toLowerCase();
+        
+        // Wait for contacts to load before making a decision
+        if (contacts.length > 0) {
+            const existingContact = contacts.find(c => c.email.toLowerCase() === targetEmail);
+
+            if (existingContact) {
+                setCurrentChat(existingContact);
+                setActiveTab("chats");
+                setShowInviteForm(false);
+            } else {
+                setInviteEmail(targetEmail);
+                setShowInviteForm(true);
+            }
+            // SAFETY FIX: Use navigate to clear state instead of window.history
+            navigate(location.pathname, { replace: true, state: {} });
+        } else if (contacts.length === 0) {
+             // Fallback if no contacts yet
+             setInviteEmail(targetEmail);
+             setShowInviteForm(true);
+             // Don't clear state yet, wait for contacts to potentially load
+        }
+    }
+  }, [location, contacts, navigate]); 
+
+  // --- 2. SOCKET SETUP ---
   useEffect(() => {
     if (isLoggedIn && email) {
       const myEmail = email.toLowerCase();
@@ -34,7 +66,12 @@ export default function Messages() {
 
       socket.on("existing_requests", (data) => setRequests(data.map(r => ({ id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp }))));
       socket.on("existing_conversations", (data) => setContacts(data.map(c => ({ ...c, role: "connected" }))));
-      socket.on("receive_request", (data) => setRequests(prev => prev.some(r => r.email === data.email) ? prev : [{...data, id: data._id || data.id}, ...prev]));
+      
+      socket.on("receive_request", (data) => setRequests(prev => {
+          if (prev.some(r => r.email === data.email)) return prev;
+          return [{...data, id: data._id || data.id}, ...prev];
+      }));
+
       socket.on("request_accepted", (data) => updateContactToConnected(data));
       
       socket.on("chat_history", (history) => {
@@ -79,16 +116,23 @@ export default function Messages() {
              avatar: (data.name && data.name[0]) ? data.name[0].toUpperCase() : "?",
              role: "connected", lastMessage: "Conversation Started", time: "Now"
          };
-         return [newContact, ...prev.filter(c => c.email !== data.email)];
+         const filtered = prev.filter(c => c.email !== data.email);
+         return [newContact, ...filtered];
      });
-     if (currentChat && currentChat.email === data.email) setCurrentChat(prev => ({ ...prev, role: "connected" }));
+     if (currentChat && currentChat.email === data.email) {
+         setCurrentChat(prev => ({ ...prev, role: "connected" }));
+     }
   };
 
   const sendInvite = (e) => {
     e.preventDefault();
     if (inviteEmail) {
       const targetEmail = inviteEmail.toLowerCase();
-      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) { alert("Contact exists or pending."); return; }
+      if(targetEmail === email.toLowerCase()) { alert("Cannot message yourself."); return; } 
+      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) { 
+          alert("Contact exists or request pending."); 
+          return; 
+      }
       socket.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
       const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, avatar: "⏳", role: "pending", lastMessage: "Invite Sent", time: "Now" };
       setContacts(prev => [pending, ...prev]);
@@ -130,12 +174,9 @@ export default function Messages() {
 
   return (
     <>
-    {/* 1. NAVBAR ADDED HERE */}
     <Navbar />
-
     <div className="messaging-page">
       <div className="messaging-container">
-        {/* SIDEBAR */}
         <div className="msg-sidebar">
           <div className="msg-header">
             <div className="user-profile">
@@ -147,7 +188,6 @@ export default function Messages() {
             <button className={`tab-btn ${activeTab === 'chats' ? 'active' : ''}`} onClick={() => setActiveTab('chats')}>Chats</button>
             <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>Requests ({requests.length})</button>
           </div>
-          
           <div className="contact-list">
             {activeTab === 'chats' && contacts.map(c => (
               <div key={c.id} className={`contact-item ${currentChat?.email === c.email ? 'active' : ''}`} onClick={() => joinChat(c)}>
@@ -169,10 +209,8 @@ export default function Messages() {
               </div>
             ))}
           </div>
-
           <div className="invite-section">
-            {!showInviteForm ?
-              <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
+            {!showInviteForm ? <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
               <form onSubmit={sendInvite} className="invite-form">
                 <input type="email" placeholder="Email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} autoFocus />
                 <div className="invite-actions">
@@ -183,8 +221,6 @@ export default function Messages() {
             }
           </div>
         </div>
-
-        {/* CHAT AREA */}
         <div className="chat-area">
           {currentChat ? (
             <>

@@ -1,10 +1,11 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom"; 
-import { useAuth } from "../contexts/AuthContext"; 
+import { Link, useNavigate, useLocation } from "react-router-dom"; 
+import { useAuth } from "../contexts/AuthContext";
 
 const Navbar = () => {
   const { isLoggedIn, role, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Hook to get current path
 
   const handleLogout = () => {
     logout();
@@ -13,6 +14,9 @@ const Navbar = () => {
 
   // Determine dashboard link based on role
   const dashboardLink = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
+
+  // Helper to check active class
+  const isActive = (path) => location.pathname === path ? "active" : "";
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark custom-navbar">
@@ -25,20 +29,20 @@ const Navbar = () => {
 
           <div className="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0">
-              <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
+              <li className="nav-item">
+                  <Link className={`nav-link ${isActive('/')}`} to="/">Home</Link>
+              </li>
               
-              {/* CONDITIONAL LINKS */}
               {isLoggedIn ? (
                 <>
-                    {/* NEW LINK HERE */}
                     <li className="nav-item">
-                        <Link className="nav-link" to="/marketplace">Find Partners</Link>
+                        <Link className={`nav-link ${isActive('/marketplace')}`} to="/marketplace">Find Partners</Link>
                     </li>
                     <li className="nav-item">
-                        <Link className="nav-link active" to={dashboardLink}>My Dashboard</Link>
+                         <Link className={`nav-link ${isActive(dashboardLink)}`} to={dashboardLink}>My Dashboard</Link>
                     </li>
                     <li className="nav-item">
-                        <Link className="nav-link" to="/messages">Messages</Link>
+                        <Link className={`nav-link ${isActive('/messages')}`} to="/messages">Messages</Link>
                     </li>
                 </>
               ) : (
@@ -70,4 +74,5 @@ const Navbar = () => {
       </nav>
   );
 };
+
 export default Navbar;

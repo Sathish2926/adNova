@@ -1,46 +1,49 @@
 import mongoose from "mongoose";
 
-// --- 1. Define Sub-Schemas for Each Role's Unique Data ---
+// Helper to clean empty strings
 const emptyStringToNull = (v) => (v === '' ? undefined : v);
 
+// --- 1. Business Profile Schema ---
 const businessProfileSchema = new mongoose.Schema({
-    // Brand Identity
-    brandName: { type: String, trim: true, set: emptyStringToNull }, // FIX APPLIED HERE
-    industry: { type: String, trim: true, set: emptyStringToNull },  // FIX APPLIED HERE
+    brandName: { type: String, trim: true, set: emptyStringToNull },
+    industry: { type: String, trim: true, set: emptyStringToNull },
     websiteUrl: { type: String, trim: true, set: emptyStringToNull },
     location: { type: String, trim: true, set: emptyStringToNull },
-    ownerName: { type: String, trim: true }, // Map to the 'owner' field in JSX
+    ownerName: { type: String, trim: true }, 
     phoneNumber: { type: String, trim: true },
+    
     // Campaign Preferences
-    targetAudience: { type: String, set: emptyStringToNull },        // FIX APPLIED HERE
+    targetAudience: { type: String, set: emptyStringToNull },
     avgBudgetPerCampaign: { type: String, set: emptyStringToNull },
     preferredPlatforms: [{ type: String }],
     
-    // Media URLs for Dashboard
+    // Images
     logoUrl: { type: String, trim: true, set: emptyStringToNull }, 
     coverUrl: { type: String, trim: true, set: emptyStringToNull },
     
     productGalleryIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Content' }],
 });
 
-// Influencer Profile Schema also needs the same fix for safety
+// --- 2. Influencer Profile Schema ---
 const influencerProfileSchema = new mongoose.Schema({
-    // Personal/Professional Identity
     displayName: { type: String, trim: true, set: emptyStringToNull },
     niche: { type: String, trim: true, set: emptyStringToNull },
-    
-    // Added Missing Fields for Dashboard
     location: { type: String, trim: true, set: emptyStringToNull },
     bio: { type: String, trim: true, set: emptyStringToNull },
+    
+    // Images
     pfp: { type: String, trim: true, set: emptyStringToNull },
-    // Monetization
+    coverUrl: { type: String, trim: true, set: emptyStringToNull }, // <--- ADDED THIS (Was missing)
+
+    // Stats & Info
+    followerCount: { type: Number, default: 0 },
+    engagementRate: { type: Number, default: 0 },
     rateCard: { type: String },
     
     pastPromotionsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Content' }], 
 });
 
-
-// --- 2. Main User Schema ---
+// --- 3. Main User Schema ---
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },

@@ -8,60 +8,38 @@ import Business from "./pages/BusinessDashboard";
 import Influencer from "./pages/InfluencerDashboard";
 import ProfileSetup from "./components/ProfileSetup";
 import Messages from "./pages/Messages"; 
-import Marketplace from "./pages/MarketPlace"; // <--- NEW IMPORT
+import Marketplace from "./pages/MarketPlace";
+import PublicProfile from "./pages/PublicProfile"; // <--- NEW IMPORT
 
 // --- Protected Route Component ---
 const ProtectedRoute = ({ element: Element }) => {
     const { isLoggedIn, isProfileComplete } = useAuth();
-
-    if (!isLoggedIn) {
-        return <Navigate to="/" replace />; 
-    }
-
-    if (!isProfileComplete) {
-        return <Navigate to="/profile-setup" replace />;
-    }
-    
+    if (!isLoggedIn) return <Navigate to="/" replace />;
+    if (!isProfileComplete) return <Navigate to="/profile-setup" replace />;
     return <Element />;
 };
 
 function App() {
     const auth = useAuth();
-    
-    // Safety check: wait for AuthContext to load
-    if (!auth || auth.isLoggedIn === undefined) { 
-        return <div>Loading Application State...</div>; 
-    }
+    if (!auth || auth.isLoggedIn === undefined) return <div>Loading Application State...</div>;
 
-    const { role, userId } = auth; 
+    const { role, userId } = auth;
 
     return (
         <Router>
             <Routes>
-                {/* --- Public Route --- */}
                 <Route path="/" element={<Home />} />
-                
-                {/* --- Profile Setup --- */}
-                <Route 
-                    path="/profile-setup" 
-                    element={<ProfileSetup userRole={role} userId={userId} />} 
-                />
+                <Route path="/profile-setup" element={<ProfileSetup userRole={role} userId={userId} />} />
                 
                 {/* --- Protected Routes --- */}
-                <Route 
-                    path="/BusinessDashboard" 
-                    element={<ProtectedRoute element={Business} />}
-                />
-                <Route 
-                    path="/InfluencerDashboard" 
-                    element={<ProtectedRoute element={Influencer} />}
-                />
-
-                {/* --- NEW MARKETPLACE ROUTE --- */}
+                <Route path="/BusinessDashboard" element={<ProtectedRoute element={Business} />} />
+                <Route path="/InfluencerDashboard" element={<ProtectedRoute element={Influencer} />} />
+                
                 <Route path="/marketplace" element={<Marketplace />} />
-
-                {/* --- Messages Route --- */}
                 <Route path="/messages" element={<Messages />} /> 
+
+                {/* --- NEW PUBLIC PROFILE ROUTE --- */}
+                <Route path="/profile/:userId" element={<PublicProfile />} />
 
             </Routes>
         </Router>
