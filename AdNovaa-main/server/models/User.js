@@ -60,7 +60,11 @@ const userSchema = new mongoose.Schema({
         required: function() { return this.role === 'influencer'; }
     },
     
-    isProfileComplete: { type: Boolean, default: false }
+    isProfileComplete: { type: Boolean, default: false },
+    
+    // Password reset fields
+    resetToken: { type: String, default: undefined },
+    resetTokenExpiry: { type: Date, default: undefined }
 
 }, { timestamps: true });
 

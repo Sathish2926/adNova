@@ -9,6 +9,7 @@ import Influencer from "./pages/InfluencerDashboard";
 import ProfileSetup from "./components/ProfileSetup";
 import Messages from "./pages/Messages"; 
 import Marketplace from "./pages/MarketPlace"; // <--- NEW IMPORT
+import ResetPassword from "./pages/ResetPassword"; // <--- NEW IMPORT
 
 // --- Protected Route Component ---
 const ProtectedRoute = ({ element: Element }) => {
@@ -46,6 +47,9 @@ function App() {
                     path="/profile-setup" 
                     element={<ProfileSetup userRole={role} userId={userId} />} 
                 />
+                
+                {/* --- Reset Password Route --- */}
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 
                 {/* --- Protected Routes --- */}
                 <Route 

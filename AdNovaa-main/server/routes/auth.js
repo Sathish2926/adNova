@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js"; 
 import upload from "../config/multerConfig.js"; 
 import fs from "fs"; 
+import crypto from "crypto";
+import nodemailer from "nodemailer"; 
 
 const router = express.Router();
 
@@ -207,6 +209,108 @@ router.get("/partners", async (req, res) => {
     } catch (err) {
         console.error("Search Error:", err);
         res.status(500).json({ success: false, message: "Search failed." });
+    }
+});
+
+// --- FORGOT PASSWORD ROUTE ---
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required." });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+        const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+        // Save reset token to user
+        user.resetToken = resetTokenHash;
+        user.resetTokenExpiry = resetTokenExpiry;
+        await user.save();
+
+        // Create reset link
+        const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+
+        // Configure nodemailer (update with your email service)
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Password Reset Request",
+            html: `
+                <h2>Password Reset Request</h2>
+                <p>You requested a password reset. Click the link below to reset your password:</p>
+                <a href="${resetLink}">Reset Password</a>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+            `,
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error("Email sending error:", err);
+                return res.status(500).json({ success: false, message: "Failed to send reset email." });
+            }
+            res.json({ success: true, message: "Password reset link sent to your email." });
+        });
+
+    } catch (err) {
+        console.error("Forgot Password Error:", err);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
+    }
+});
+
+// --- RESET PASSWORD ROUTE ---
+router.post("/reset-password", async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ success: false, message: "Token and new password are required." });
+        }
+
+        // Hash the token to compare
+        const resetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+        // Find user with matching token and check expiry
+        const user = await User.findOne({
+            resetToken: resetTokenHash,
+            resetTokenExpiry: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password and clear reset token
+        user.password = hashedPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpiry = undefined;
+        await user.save();
+
+        res.json({ success: true, message: "Password reset successfully!" });
+
+    } catch (err) {
+        console.error("Reset Password Error:", err);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
     }
 });
 
