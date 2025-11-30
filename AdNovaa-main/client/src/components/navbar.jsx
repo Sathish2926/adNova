@@ -5,36 +5,34 @@ import { useAuth } from "../contexts/AuthContext";
 const Navbar = () => {
   const { isLoggedIn, role, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get current path
+  const location = useLocation(); 
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // Determine dashboard link based on role
   const dashboardLink = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
-
-  // Helper to check active class
   const isActive = (path) => location.pathname === path ? "active" : "";
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark custom-navbar">
+    <nav className="navbar navbar-expand-lg custom-navbar">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">✦adNova</Link>
 
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-            <span className="navbar-toggler-icon"></span>
+            <span className="navbar-toggler-icon" style={{filter: 'invert(1)'}}></span>
           </button>
 
           <div className="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0">
-              <li className="nav-item">
-                  <Link className={`nav-link ${isActive('/')}`} to="/">Home</Link>
-              </li>
               
+              {/* LOGGED IN LINKS */}
               {isLoggedIn ? (
                 <>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/')}`} to="/">Home</Link>
+                    </li>
                     <li className="nav-item">
                         <Link className={`nav-link ${isActive('/marketplace')}`} to="/marketplace">Find Partners</Link>
                     </li>
@@ -46,7 +44,9 @@ const Navbar = () => {
                     </li>
                 </>
               ) : (
+                /* GUEST LINKS (Scroll Anchors) */
                 <>
+                    <li className="nav-item"><a className="nav-link" href="#home">Home</a></li>
                     <li className="nav-item"><a className="nav-link" href="#services">Services</a></li>
                     <li className="nav-item"><a className="nav-link" href="#about">About Us</a></li>
                 </>

@@ -1,4 +1,6 @@
 import React from "react";
+import { useAuth } from "../contexts/AuthContext"; // Import Auth
+import { useNavigate } from "react-router-dom";   // Import Navigation
 
 // Helper to switch tabs
 const switchTab = (tab) => {
@@ -20,98 +22,137 @@ const switchTab = (tab) => {
   }
 };
 
-const handleInfluencerSignup = async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  if (!form.checkValidity()) {
-    form.classList.add("was-validated");
-    return;
-  }
-
-  // Uses IDs for safety
-  const name = document.getElementById("inf_name").value;
-  const email = document.getElementById("inf_email").value;
-  const password = document.getElementById("inf_pass").value;
-  const role = "influencer";
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    alert("Influencer account created! Please Login.");
-    // Optionally close modal here
-  } catch (err) {
-    alert("Signup Failed: " + err.message);
-  }
-};
-
-const handleBusinessSignup = async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  if (!form.checkValidity()) {
-    form.classList.add("was-validated");
-    return;
-  }
-
-  // FIXED: Using IDs to ensure we get the right data
-  const businessName = document.getElementById("biz_name").value;
-  const email = document.getElementById("biz_email").value;
-  const password = document.getElementById("biz_pass").value;
-  const role = "business";
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Mapping 'businessName' to 'name' for the User model
-        body: JSON.stringify({ name: businessName, email, password, role }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    alert("Business account created! Please Login.");
-  } catch (err) {
-    alert("Signup Failed: " + err.message);
-  }
-};
-
 const SignupModal = () => {
+  const { login } = useAuth();      // Get login function
+  const navigate = useNavigate();   // Get navigation
+
+  // --- CLOSE MODAL HELPER ---
+  const closeBootstrapModal = () => {
+    const modalElement = document.getElementById('signupModal');
+    if (modalElement) {
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if(backdrop) backdrop.remove();
+    }
+  };
+
+  const handleInfluencerSignup = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+    const name = document.getElementById("inf_name").value;
+    const email = document.getElementById("inf_email").value;
+    const password = document.getElementById("inf_pass").value;
+    const role = "influencer";
+    
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      
+      // AUTO LOGIN & REDIRECT
+      login(data);
+      closeBootstrapModal();
+      navigate('/profile-setup');
+
+    } catch (err) {
+      console.error("Signup Failed: ", err.message);
+    }
+  };
+
+  const handleBusinessSignup = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+    const businessName = document.getElementById("biz_name").value;
+    const email = document.getElementById("biz_email").value;
+    const password = document.getElementById("biz_pass").value;
+    const role = "business";
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: businessName, email, password, role }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      
+      // AUTO LOGIN & REDIRECT
+      login(data);
+      closeBootstrapModal();
+      navigate('/profile-setup');
+
+    } catch (err) {
+      console.error("Signup Failed: ", err.message);
+    }
+  };
+
+  const tabStyle = {
+    flex: 1, padding: '12px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+    cursor: 'pointer', fontWeight: '600', transition: '0.3s', textAlign: 'center',
+    background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8'
+  };
+
+  const activeTabStyle = {
+    ...tabStyle,
+    background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', borderColor: 'transparent',
+    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)'
+  };
+
   return (
     <div className="modal fade" id="signupModal" tabIndex="-1" aria-hidden="true">
       <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content signup-popup">
-          <div className="modal-header border-0">
-            <h4 className="fw-bold text-white">Create Your Account</h4>
-            <button className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div className="modal-content">
+          <div className="modal-header">
+            <h4 className="modal-title">Create Your Account</h4>
+            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div className="modal-body">
+          <div className="modal-body p-4">
             
-            {/* Tabs */}
-            <div className="d-flex gap-2 mb-4">
-              <button className="signup-tab active" id="infTab" onClick={() => switchTab("influencer")}>Influencer</button>
-              <button className="signup-tab" id="bizTab" onClick={() => switchTab("business")}>Business</button>
+            <div className="d-flex gap-3 mb-4">
+              <div id="infTab" className="active"
+                onClick={(e) => {
+                    switchTab("influencer");
+                    e.currentTarget.style.cssText = `flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: linear-gradient(135deg, #6366F1, #4F46E5); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);`;
+                    document.getElementById("bizTab").style.cssText = `flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: rgba(255, 255, 255, 0.05); color: #94a3b8;`;
+                }}
+                style={activeTabStyle}>INFLUENCER</div>
+              <div id="bizTab" onClick={(e) => {
+                    switchTab("business");
+                    e.currentTarget.style.cssText = `flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: linear-gradient(135deg, #6366F1, #4F46E5); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);`;
+                    document.getElementById("infTab").style.cssText = `flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: rgba(255, 255, 255, 0.05); color: #94a3b8;`;
+                }}
+                style={tabStyle}>BUSINESS</div>
             </div>
 
-            {/* Influencer Form */}
-            <form id="influencerForm" className="signup-form needs-validation" noValidate onSubmit={handleInfluencerSignup}>
-              <input id="inf_name" className="form-control mb-3" placeholder="Full Name" required />
-              <input id="inf_email" className="form-control mb-3" placeholder="Email Address" type="email" required />
-              <input id="inf_phone" className="form-control mb-3" placeholder="Phone Number" type="tel" />
-              <input id="inf_pass" className="form-control mb-3" placeholder="Password" type="password" minLength={6} required />
-              <button className="btn btn-primary w-100" type="submit">Create Influencer Account</button>
+            <form id="influencerForm" className="needs-validation" noValidate onSubmit={handleInfluencerSignup}>
+              <div className="mb-3"><label className="form-label text-white">Full Name</label><input id="inf_name" className="form-control" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Email</label><input id="inf_email" className="form-control" type="email" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Phone</label><input id="inf_phone" className="form-control" type="tel" /></div>
+              <div className="mb-4"><label className="form-label text-white">Password</label><input id="inf_pass" className="form-control" type="password" minLength={6} required /></div>
+              <button className="btn btn-primary w-100 py-3" type="submit">Create Influencer Account</button>
             </form>
 
-            {/* Business Form (FIXED IDs) */}
-            <form id="businessForm" className="signup-form d-none needs-validation" noValidate onSubmit={handleBusinessSignup}>
-              <input id="biz_name" className="form-control mb-3" placeholder="Business Name" required />
-              <input id="biz_owner" className="form-control mb-3" placeholder="Owner Name" />
-              <input id="biz_email" className="form-control mb-3" placeholder="Business Email" type="email" required />
-              <input id="biz_phone" className="form-control mb-3" placeholder="Contact Number" type="tel" />
-              <input id="biz_pass" className="form-control mb-3" placeholder="Password" type="password" minLength={6} required />
-              <button className="btn btn-primary w-100" type="submit">Create Business Account</button>
+            <form id="businessForm" className="d-none needs-validation" noValidate onSubmit={handleBusinessSignup}>
+              <div className="mb-3"><label className="form-label text-white">Business Name</label><input id="biz_name" className="form-control" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Owner Name</label><input id="biz_owner" className="form-control" /></div>
+              <div className="mb-3"><label className="form-label text-white">Email</label><input id="biz_email" className="form-control" type="email" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Contact</label><input id="biz_phone" className="form-control" type="tel" /></div>
+              <div className="mb-4"><label className="form-label text-white">Password</label><input id="biz_pass" className="form-control" type="password" minLength={6} required /></div>
+              <button className="btn btn-primary w-100 py-3" type="submit">Create Business Account</button>
             </form>
 
           </div>

@@ -58,34 +58,19 @@ const LoginModal = () => {
     }
   };
 
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
+    if (!email || !password) return; // Silent return
 
-    const response = await loginUser({ email, password }); 
-    
+    const response = await loginUser({ email, password });
     if (response.success) {
       login(response);
-
       const role = response.role; 
-      let dashboardPath = "/"; 
-
-      // FIXED ROUTE CASING HERE
-      if (role === "business") {
-          dashboardPath = "/BusinessDashboard"; 
-      } else if (role === "influencer") {
-          dashboardPath = "/InfluencerDashboard"; 
-      }
-      
+      let dashboardPath = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
       closeBootstrapModal(); 
       navigate(dashboardPath, { replace: true });
-
     } else {
-      alert("Login failed: " + response.message);
+      console.error("Login failed: " + response.message);
     }
   };
 

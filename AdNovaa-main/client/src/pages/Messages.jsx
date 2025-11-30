@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import { useAuth } from "../contexts/AuthContext"; 
 import { useLocation, useNavigate } from "react-router-dom"; 
@@ -8,15 +8,18 @@ import "./messages.css";
 const SOCKET_URL = "http://localhost:5000";
 const socket = io.connect(SOCKET_URL);
 
+// Helper for Encryption
 const SimpleCrypto = {
   encrypt: (text, key) => { try { return btoa(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('')); } catch (e) { return text; } },
   decrypt: (encoded, key) => { try { return atob(encoded).split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join(''); } catch (e) { return "**Error**"; } }
 };
 
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
 export default function Messages() {
-  const { name = "User", email = "", isLoggedIn } = useAuth();
+  const { name = "User", email = "", isLoggedIn, userId, role } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate(); // Added navigate hook
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("chats");
   const [contacts, setContacts] = useState([]);
@@ -26,19 +29,66 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [myImage, setMyImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   const generateRoomId = (email1, email2) => [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
 
-  // --- 1. HANDLE "INITIATE CHAT" (FIXED) ---
+  // --- HELPER: Resolve Image URL ---
+  const getImgUrl = (path) => {
+      if (!path || path === "") return DEFAULT_PFP;
+      if (path.startsWith('http')) return path;
+      return `http://localhost:5000${path}`;
+  };
+
+  const handleImgError = (e) => {
+      e.target.onerror = null;
+      e.target.src = DEFAULT_PFP;
+  };
+
+  // --- 0. FETCH MY IMAGE ---
+  useEffect(() => {
+      if(userId) {
+          fetch(`http://localhost:5000/api/auth/profile/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const img = role === 'business' ? data.user.businessProfile?.logoUrl : data.user.influencerProfile?.pfp;
+                    setMyImage(img);
+                }
+            }).catch(console.error);
+      }
+  }, [userId, role]);
+
+  // --- FIXED: useCallback to resolve dependency warning ---
+  const updateContactToConnected = useCallback((data) => {
+     setContacts(prev => {
+         const newContact = {
+             id: data.conversationId || Date.now(), 
+             name: data.name, 
+             email: data.email,
+             image: data.image, 
+             role: "connected", 
+             lastMessage: "Conversation Started", 
+             time: "Now"
+         };
+         const filtered = prev.filter(c => c.email !== data.email);
+         return [newContact, ...filtered];
+     });
+     
+     // If we are currently viewing the pending chat, update it
+     if (currentChat && currentChat.email === data.email) {
+         setCurrentChat(prev => ({ ...prev, role: "connected" }));
+     }
+  }, [currentChat]);
+
+  // --- 1. HANDLE "INITIATE CHAT" ---
   useEffect(() => {
     if (location.state && location.state.initiateChat) {
         const targetEmail = location.state.initiateChat.toLowerCase();
         
-        // Wait for contacts to load before making a decision
         if (contacts.length > 0) {
             const existingContact = contacts.find(c => c.email.toLowerCase() === targetEmail);
-
             if (existingContact) {
                 setCurrentChat(existingContact);
                 setActiveTab("chats");
@@ -47,13 +97,10 @@ export default function Messages() {
                 setInviteEmail(targetEmail);
                 setShowInviteForm(true);
             }
-            // SAFETY FIX: Use navigate to clear state instead of window.history
             navigate(location.pathname, { replace: true, state: {} });
         } else if (contacts.length === 0) {
-             // Fallback if no contacts yet
              setInviteEmail(targetEmail);
              setShowInviteForm(true);
-             // Don't clear state yet, wait for contacts to potentially load
         }
     }
   }, [location, contacts, navigate]); 
@@ -62,8 +109,10 @@ export default function Messages() {
   useEffect(() => {
     if (isLoggedIn && email) {
       const myEmail = email.toLowerCase();
-      socket.emit("register_user", myEmail);
+      const register = () => socket.emit("register_user", myEmail);
+      register();
 
+      socket.on("connect", register);
       socket.on("existing_requests", (data) => setRequests(data.map(r => ({ id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp }))));
       socket.on("existing_conversations", (data) => setContacts(data.map(c => ({ ...c, role: "connected" }))));
       
@@ -98,6 +147,7 @@ export default function Messages() {
       });
     }
     return () => {
+      socket.off("connect");
       socket.off("existing_requests");
       socket.off("existing_conversations");
       socket.off("receive_request");
@@ -105,36 +155,19 @@ export default function Messages() {
       socket.off("chat_history");
       socket.off("receive_message");
     };
-  }, [isLoggedIn, email, currentChat]);
+  }, [isLoggedIn, email, currentChat, updateContactToConnected]); 
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const updateContactToConnected = (data) => {
-     setContacts(prev => {
-         const newContact = {
-             id: data.conversationId || Date.now(), name: data.name, email: data.email,
-             avatar: (data.name && data.name[0]) ? data.name[0].toUpperCase() : "?",
-             role: "connected", lastMessage: "Conversation Started", time: "Now"
-         };
-         const filtered = prev.filter(c => c.email !== data.email);
-         return [newContact, ...filtered];
-     });
-     if (currentChat && currentChat.email === data.email) {
-         setCurrentChat(prev => ({ ...prev, role: "connected" }));
-     }
-  };
-
-  const sendInvite = (e) => {
+const sendInvite = (e) => {
     e.preventDefault();
     if (inviteEmail) {
       const targetEmail = inviteEmail.toLowerCase();
-      if(targetEmail === email.toLowerCase()) { alert("Cannot message yourself."); return; } 
-      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) { 
-          alert("Contact exists or request pending."); 
-          return; 
-      }
+      if(targetEmail === email.toLowerCase()) return; // Silent
+      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) return; // Silent
+      
       socket.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
-      const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, avatar: "⏳", role: "pending", lastMessage: "Invite Sent", time: "Now" };
+      const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, image: "", role: "pending", lastMessage: "Invite Sent", time: "Now" };
       setContacts(prev => [pending, ...prev]);
       setCurrentChat(pending);
       setInviteEmail("");
@@ -144,7 +177,10 @@ export default function Messages() {
 
   const acceptRequest = (req) => {
     socket.emit("accept_request", { requestId: req.id, acceptorName: name, acceptorEmail: email });
-    const newContact = { id: req.id, name: req.name, email: req.email, avatar: (req.name && req.name[0]) ? req.name[0].toUpperCase() : "?", role: "connected", lastMessage: "Conversation Started", time: "Now" };
+    const newContact = { 
+        id: req.id, name: req.name, email: req.email, image: "", 
+        role: "connected", lastMessage: "Conversation Started", time: "Now" 
+    };
     setContacts(prev => [newContact, ...prev]);
     setRequests(prev => prev.filter(r => r.id !== req.id));
     setActiveTab("chats");
@@ -170,17 +206,25 @@ export default function Messages() {
   if (!isLoggedIn) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}><h2>Please log in.</h2></div>;
 
   const safeName = name || "User";
-  const safeAvatar = safeName[0] ? safeName[0].toUpperCase() : "?";
 
   return (
     <>
     <Navbar />
     <div className="messaging-page">
       <div className="messaging-container">
+        
+        {/* --- SIDEBAR --- */}
         <div className="msg-sidebar">
           <div className="msg-header">
             <div className="user-profile">
-              <div className="avatar-circle">{safeAvatar}</div>
+               {/* My Profile Pic */}
+               <img 
+                    src={getImgUrl(myImage)} 
+                    alt="Me" 
+                    className="avatar-img" 
+                    onError={handleImgError}
+                    style={{border:'2px solid var(--accent)'}} 
+                />
               <div className="user-info"><h4>{safeName}</h4><span className="user-email">{email}</span></div>
             </div>
           </div>
@@ -188,19 +232,24 @@ export default function Messages() {
             <button className={`tab-btn ${activeTab === 'chats' ? 'active' : ''}`} onClick={() => setActiveTab('chats')}>Chats</button>
             <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>Requests ({requests.length})</button>
           </div>
+          
           <div className="contact-list">
             {activeTab === 'chats' && contacts.map(c => (
               <div key={c.id} className={`contact-item ${currentChat?.email === c.email ? 'active' : ''}`} onClick={() => joinChat(c)}>
-                <div className="avatar-circle">{c.avatar}</div>
+                <img src={getImgUrl(c.image)} alt={c.name} className="avatar-img" onError={handleImgError} />
                 <div className="contact-details">
-                  <div className="contact-top"><span className="contact-name">{c.name}</span><span className="contact-time">{c.time}</span></div>
+                  <div className="contact-top">
+                      {/* FIX: NAME FALLBACK */}
+                      <span className="contact-name">{c.name || c.email}</span>
+                      <span className="contact-time">{c.time}</span>
+                  </div>
                   <p className="last-message">{c.role === 'pending' ? 'Pending Acceptance...' : c.lastMessage}</p>
                 </div>
               </div>
             ))}
             {activeTab === 'requests' && requests.map(r => (
               <div key={r.id} className="request-item">
-                <div style={{display:'flex',justifyContent:'space-between'}}><span>{r.name}</span><span>{r.time}</span></div>
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>{r.name || r.email}</span><span>{r.time}</span></div>
                 <div style={{fontSize:'0.8rem', color:'#aaa'}}>{r.email}</div>
                 <div className="request-actions">
                   <button className="btn-accept" onClick={() => acceptRequest(r)}>Accept</button>
@@ -209,6 +258,7 @@ export default function Messages() {
               </div>
             ))}
           </div>
+          
           <div className="invite-section">
             {!showInviteForm ? <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
               <form onSubmit={sendInvite} className="invite-form">
@@ -221,13 +271,21 @@ export default function Messages() {
             }
           </div>
         </div>
+
+        {/* --- CHAT AREA --- */}
         <div className="chat-area">
           {currentChat ? (
             <>
               <div className="chat-header">
                 <div className="user-profile">
-                  <div className="avatar-circle">{currentChat.avatar}</div>
-                  <div><span className="contact-name">{currentChat.name}</span> <span className="chat-role-badge">{currentChat.role === 'pending' ? 'PENDING' : 'CONNECTED'}</span></div>
+                  <img src={getImgUrl(currentChat.image)} alt={currentChat.name} className="avatar-img" onError={handleImgError} />
+                  <div>
+                      <span className="contact-name">{currentChat.name || currentChat.email}</span> 
+                      {/* FIXED: CONNECTED BADGE */}
+                      <span className="chat-role-badge">
+                          {currentChat.role === 'pending' ? 'PENDING' : 'CONNECTED'}
+                      </span>
+                  </div>
                 </div>
               </div>
               <div className="messages-feed">

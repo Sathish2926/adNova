@@ -2,143 +2,240 @@
    FILE: client/src/styles/InfluencerDashboard.css
    ============================== */
 
-/* Wrapper */
+/* --- 1. FORCE SCROLL RESTORATION --- */
+html, body {
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
 .inf-wrapper {
-  padding-top: 100px;
+  padding-top: 90px;
   min-height: 100vh;
-  padding-bottom: 50px;
+  padding-bottom: 80px; /* Space for FAB */
   width: 100%;
+  background: #030b25;
+  overflow-y: visible !important;
 }
 
 .inf-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 95%;
-  display: grid;
-  grid-template-columns: 320px 1fr; /* Sidebar Fixed | Content Fluid */
-  gap: 40px;
-  align-items: start;
+  max-width: 1200px; margin: 0 auto; width: 95%;
+  display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: start;
 }
+@media (max-width: 900px) { .inf-container { grid-template-columns: 1fr; } }
 
-@media (max-width: 900px) {
-  .inf-container { grid-template-columns: 1fr; }
-}
-
-/* --- SIDEBAR --- */
+/* SIDEBAR */
 .inf-sidebar {
-  /* Inherits glass-panel properties from index.css */
-  padding: 30px;
-  text-align: center;
-  position: sticky;
-  top: 100px; /* Sticks on scroll */
+  padding: 30px; text-align: center; position: sticky; top: 100px;
+  background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
-/* PFP Styles */
-.pfp-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
+.pfp-container { display: flex; justify-content: center; margin-bottom: 20px; }
 .pfp-circle {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  background-size: cover;
-  background-position: center;
-  border: 4px solid var(--bg-dark);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  width: 140px; height: 140px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 4px solid #030b25; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
   position: relative;
 }
-
 .pfp-edit-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-  opacity: 0;
-  cursor: pointer;
-  transition: 0.2s;
+  position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+  opacity: 0; cursor: pointer; transition: 0.2s; color: white; font-size: 1.5rem;
 }
 .pfp-circle:hover .pfp-edit-overlay { opacity: 1; }
 
-/* Info Styles */
-.inf-name { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; color: white; }
+.inf-name { font-size: 1.8rem; margin-bottom: 5px; color: white; font-weight: 700; }
 .inf-location { color: #94a3b8; font-size: 0.95rem; margin-bottom: 15px; }
 
 .inf-badge {
-  display: inline-block;
-  background: rgba(99, 102, 241, 0.2);
-  color: var(--primary);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-transform: uppercase;
+  display: inline-block; background: #1e293b; color: #6366F1;
+  padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+  margin-bottom: 20px; text-transform: uppercase; border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .inf-bio {
-  color: #cbd5e1;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  background: rgba(0,0,0,0.2);
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 25px;
-  text-align: left;
+  text-align: left; background: #1e293b; padding: 15px;
+  border-radius: 12px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6;
 }
 
-/* Stats */
-.inf-stats {
-  display: flex;
-  justify-content: space-around;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  padding-top: 20px;
+.inf-stats { 
+    display: flex; 
+    justify-content: center; /* Center the box */
+    border-top: 1px solid rgba(255,255,255,0.1); 
+    padding-top: 20px; 
 }
 
-.stat-num { font-size: 1.4rem; font-weight: 800; color: white; }
-.stat-label { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; margin-top: 5px; }
+.stat-box {
+    text-align: center;
+}
 
-/* --- CONTENT AREA --- */
+/* Container for Number + Icon */
+.stat-num-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Space between number and icon */
+}
+
+.stat-num { 
+    font-size: 1.8rem; 
+    font-weight: 800; 
+    color: white; 
+    line-height: 1;
+}
+
+.stat-label { 
+    font-size: 0.8rem; 
+    color: #0dcaf0; 
+    text-transform: uppercase; 
+    margin-top: 5px; 
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Sync Button Style */
+.sync-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.sync-btn:hover {
+    color: #6366F1;
+    transform: scale(1.1);
+}
+
+.sync-btn:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+/* Spin Animation */
+.spinning {
+    animation: spin 1s linear infinite;
+    color: #6366F1; /* Turn purple while loading */
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 25px;
-  color: white;
+  font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 10px; color: white; font-weight: 700;
 }
 
-/* New Post Tile specific to this layout */
+/* CONTENT TILES */
 .new-post-tile {
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  min-height: 250px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.02);
-  transition: 0.3s;
-  width: 100%;
+  border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px; color: #94a3b8; cursor: pointer; transition: 0.3s;
+  width: 100%; min-height: 250px; background: #0f172a;
 }
-.new-post-tile:hover {
-  border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
-  color: var(--primary);
-}
+.new-post-tile:hover { border-color: #6366F1; background: #1e293b; color: #6366F1; }
 .plus-icon { font-size: 2.5rem; margin-bottom: 10px; }
 
-/* Edit Inputs */
-.edit-input { margin-bottom: 10px; }
-.edit-textarea { margin-bottom: 10px; min-height: 100px; }
+/* CARD & OVERLAY */
+.post-card { position: relative !important; overflow: hidden !important; border-radius: 12px; background: #1e293b; }
+.post-card img { width: 100%; display: block; transition: 0.5s; }
+.post-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+  background: linear-gradient(to top, rgba(3, 11, 37, 0.95) 0%, rgba(3, 11, 37, 0.6) 70%, transparent 100%);
+  opacity: 0; transition: 0.3s; max-height: 100%; overflow-y: auto;
+}
+.post-card:hover .post-overlay { opacity: 1; }
+.post-card:hover img { transform: scale(1.05); }
 
-/* --- REUSED ELEMENTS --- */
-/* The FAB and Modal styles are reused from businessDashboard.css via the class names */
-/* .fab-edit, .post-form-overlay, .post-form-container */
+/* --- FIXED FAB --- */
+.fab-edit {
+  position: fixed !important; bottom: 40px !important; right: 40px !important;
+  width: 60px !important; height: 60px !important; border-radius: 50% !important;
+  background: #6366F1 !important; color: white !important; border: none !important;
+  font-size: 1.5rem !important; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5) !important;
+  cursor: pointer !important; z-index: 9999 !important;
+  display: flex; align-items: center; justify-content: center; transition: transform 0.2s;
+}
+.fab-edit:hover { transform: scale(1.1); }
+
+/* --- MODAL --- */
+.post-form-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.post-form-container {
+  width: 100%; max-width: 500px; padding: 30px; background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; flex-direction: column;
+  max-height: 85vh; overflow-y: auto;
+}
+.post-form-container::-webkit-scrollbar { width: 6px; }
+.post-form-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+/* File Upload */
+.file-upload-wrapper { width: 100%; margin-bottom: 15px; flex-shrink: 0; }
+.file-upload-label {
+    display: flex; justify-content: center; align-items: center;
+    width: 100%; height: 250px; background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 12px; cursor: pointer; transition: 0.3s;
+    overflow: hidden; position: relative;
+}
+.file-upload-label:hover { background: rgba(255, 255, 255, 0.1); border-color: #6366F1; }
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; color: #94a3b8; gap: 10px; }
+.preview-img { width: 100%; height: 100%; object-fit: cover; display: block; margin: 0; border-radius: 0; }
+
+.edit-input, .edit-textarea { 
+  margin-bottom: 12px; background: #020617 !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.post-form-container button { border-radius: 8px !important; padding: 12px; font-weight: 600; }
+.connected-socials {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.social-badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: transform 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.social-badge:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Specific Platform Colors */
+.social-badge.insta {
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.social-badge.yt {
+    background: #FF0000;
+}
+
+.social-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 5px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}

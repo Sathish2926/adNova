@@ -10,19 +10,30 @@ const PROFILE_UPDATE_URL = "http://localhost:5000/api/auth/update-profile";
 const UPLOAD_API_URL = "http://localhost:5000/api/auth/upload-image";
 const CREATE_POST_URL = "http://localhost:5000/api/posts/create"; 
 const USER_POSTS_URL = (userId) => `http://localhost:5000/api/posts/user/${userId}`;
+const REFRESH_STATS_URL = "http://localhost:5000/api/auth/refresh-socials";
+
 const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
 export default function InfluencerDashboard() {
     const { userId, role } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [showPostForm, setShowPostForm] = useState(false);
     
-    const [profile, setProfile] = useState({ name: '', niche: '', location: '', bio: '', followers: '0', subscribers: '0', pfp: '', rateCard: '' });
+    const [profile, setProfile] = useState({
+        name: '', niche: '', location: '', bio: '', followers: 0, 
+        pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
+    });
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
 
-    // --- IMAGE URL HELPER ---
+    const formatCompactNumber = (number) => {
+        const num = Number(number);
+        if (isNaN(num)) return "0";
+        return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
+    };
+
     const getImgUrl = (path) => {
         if (!path) return DEFAULT_PFP;
         if (path.startsWith('http')) return path;
@@ -38,15 +49,17 @@ export default function InfluencerDashboard() {
                     if (data.success) {
                         const user = data.user;
                         const inf = user.influencerProfile || {};
+                        
                         setProfile({
                             name: inf.displayName || user.name || "Influencer Name",
                             niche: inf.niche || "Content Creator",
                             location: inf.location || "Location", 
                             bio: inf.bio || "No bio added yet.", 
-                            followers: inf.followerCount ? `${inf.followerCount}` : '0',
-                            subscribers: inf.followerCount ? `${(inf.followerCount / 1000).toFixed(1)}K` : '0',
+                            followers: inf.followerCount || 0,
                             pfp: inf.pfp || DEFAULT_PFP,
                             rateCard: inf.rateCard || '',
+                            instagramHandle: inf.instagramHandle || '',
+                            youtubeHandle: inf.youtubeHandle || ''
                         });
                     }
                 }).catch(err => console.error(err));
@@ -58,6 +71,25 @@ export default function InfluencerDashboard() {
                 .finally(() => setIsLoading(false));
         }
     }, [userId]);
+
+    const handleRefreshStats = async () => {
+        setIsRefreshing(true);
+        try {
+            const res = await fetch(REFRESH_STATS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setProfile(prev => ({ ...prev, followers: data.count }));
+                alert(`Stats Updated: ${formatCompactNumber(data.count)}`);
+            } else {
+                alert(data.message);
+            }
+        } catch (err) { console.error(err); } 
+        finally { setIsRefreshing(false); }
+    };
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
@@ -87,7 +119,7 @@ export default function InfluencerDashboard() {
     };
     
     const addPost = async () => {
-        if (!newPost.img) return alert("Please upload an image.");
+        if (!newPost.img) return;
         try {
             const res = await fetch(CREATE_POST_URL, {
                 method: 'POST',
@@ -106,15 +138,22 @@ export default function InfluencerDashboard() {
     const handleSaveProfile = async () => {
         setEditMode(false);
         const pfpToSend = profile.pfp === DEFAULT_PFP ? "" : profile.pfp;
+        
         try {
             await fetch(PROFILE_UPDATE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, role, profileData: {
-                    displayName: profile.name, niche: profile.niche, location: profile.location, 
-                    bio: profile.bio, followerCount: Number(profile.followers), pfp: pfpToSend
+                    displayName: profile.name, 
+                    niche: profile.niche, 
+                    location: profile.location, 
+                    bio: profile.bio, 
+                    pfp: pfpToSend,
+                    instagramHandle: profile.instagramHandle,
+                    youtubeHandle: profile.youtubeHandle
                 }}),
             });
+            if(profile.instagramHandle || profile.youtubeHandle) handleRefreshStats();
         } catch (error) { console.error(error); }
     };
 
@@ -140,7 +179,12 @@ export default function InfluencerDashboard() {
                                     <input className='edit-input' value={profile.location} onChange={(e) => setProfile(p => ({...p, location: e.target.value}))} placeholder="Location" />
                                     <input className='edit-input' value={profile.niche} onChange={(e) => setProfile(p => ({...p, niche: e.target.value}))} placeholder="Niche" />
                                     <textarea className='edit-textarea' value={profile.bio} onChange={(e) => setProfile(p => ({...p, bio: e.target.value}))} placeholder="Bio" />
-                                    <input className='edit-input' type="number" value={profile.followers} onChange={(e) => setProfile(p => ({...p, followers: e.target.value}))} placeholder="Follower Count" />
+                                    
+                                    <div style={{marginTop:'15px', borderTop:'1px solid rgba(255,255,255,0.1)', paddingTop:'10px'}}>
+                                        <label style={{fontSize:'0.8rem', color:'#94a3b8', display:'block', marginBottom:'5px'}}>Social Handles (No @)</label>
+                                        <input className='edit-input' value={profile.instagramHandle} onChange={(e) => setProfile(p => ({...p, instagramHandle: e.target.value}))} placeholder="Instagram (e.g. adnova)" />
+                                        <input className='edit-input' value={profile.youtubeHandle} onChange={(e) => setProfile(p => ({...p, youtubeHandle: e.target.value}))} placeholder="YouTube (e.g. adnova_official)" />
+                                    </div>
                                 </>
                             ) : (
                                 <>
@@ -148,20 +192,47 @@ export default function InfluencerDashboard() {
                                     <p className='inf-location'>📍 {profile.location}</p>
                                     <div className='inf-badge'>{profile.niche}</div>
                                     <p className='inf-bio'>{profile.bio}</p>
+
+                                    {/* --- NEW: VERIFIED SOURCES DISPLAY --- */}
+                                    {(profile.instagramHandle || profile.youtubeHandle) && (
+                                        <div style={{textAlign:'center', marginTop:'15px'}}>
+                                            <span className="social-label">Verified Sources</span>
+                                            <div className="connected-socials">
+                                                {profile.instagramHandle && (
+                                                    <a href={`https://instagram.com/${profile.instagramHandle}`} target="_blank" rel="noreferrer" className="social-badge insta">
+                                                        <i className="fa-brands fa-instagram"></i> @{profile.instagramHandle}
+                                                    </a>
+                                                )}
+                                                {profile.youtubeHandle && (
+                                                    <a href={`https://youtube.com/@${profile.youtubeHandle}`} target="_blank" rel="noreferrer" className="social-badge yt">
+                                                        <i className="fa-brands fa-youtube"></i> @{profile.youtubeHandle}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
+                        
                         <div className='inf-stats'>
-                            <div className='stat-box'><div className='stat-num'>{Number(profile.followers).toLocaleString()}</div><div className='stat-label'>Followers</div></div>
-                            <div className='stat-box'><div className='stat-num'>{profile.subscribers}</div><div className='stat-label'>Subscribers</div></div>
+                            <div className='stat-box'>
+                                <div className='stat-num-row'>
+                                    <span className='stat-num'>{formatCompactNumber(profile.followers)}</span>
+                                    <button className={`sync-btn ${isRefreshing ? 'spinning' : ''}`} onClick={handleRefreshStats} title="Sync Followers" disabled={isRefreshing}>↻</button>
+                                </div>
+                                <div className='stat-label'>Total Reach</div>
+                            </div>
                         </div>
                     </aside>
 
                     <main className='inf-content' data-aos="fade-left">
                         <h3 className='section-title'>My Content Portfolio</h3>
                         <div className='masonry-container'>
-                            <div className='masonry-item new-post-tile' onClick={()=>setShowPostForm(true)}>
-                                <div className='plus-icon'>+</div><div>Add New Content</div>
+                            <div className='masonry-item' style={{display:'inline-block', width:'100%'}}>
+                                <div className='new-post-tile' onClick={()=>setShowPostForm(true)}>
+                                    <div className='plus-icon'>+</div><div>Add New Content</div>
+                                </div>
                             </div>
                             {posts.map((p,i)=>(
                                 <div className='masonry-item post-card glass-card' key={i}>
@@ -180,8 +251,12 @@ export default function InfluencerDashboard() {
                     <div className='post-form-overlay' onClick={()=>setShowPostForm(false)}>
                         <div className='post-form-container glass-panel' onClick={(e)=>e.stopPropagation()}>
                             <h3 style={{marginBottom:'20px', color:'white'}}>Add to Portfolio</h3>
-                            <input type='file' accept='image/*' onChange={handleNewPostImage} style={{marginBottom: 15}} />
-                            {newPost.img && <img className='preview-img' src={getImgUrl(newPost.img)} alt='preview' />}
+                            <div className="file-upload-wrapper">
+                                <input type="file" accept="image/*" id="inf-post-upload" hidden onChange={handleNewPostImage} />
+                                <label htmlFor="inf-post-upload" className="file-upload-label">
+                                    {newPost.img ? <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" /> : <div className="upload-placeholder"><span style={{fontSize:'2rem'}}>📁</span><span>Click to Upload Image</span></div>}
+                                </label>
+                            </div>
                             <input className='edit-input' placeholder='Title' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
                             <input className='edit-input' placeholder='Description' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
                             <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
