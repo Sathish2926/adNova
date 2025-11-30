@@ -1,22 +1,144 @@
-/* Influencer CSS adapted from your file */
-.profile-wrapper-react { max-width:1200px; margin:2rem auto; padding:1rem; }
-.profile-section-react { display:flex; gap:24px; align-items:flex-start; }
-.profile-left-react { width:320px; }
-.pfp-area { display:flex; justify-content:center; }
-.pfp-box { width:150px; height:150px; border-radius:50%; background-size:cover; background-position:center; border:3px solid rgba(255,255,255,0.14); box-shadow:0 6px 20px rgba(0,0,0,0.45); cursor:pointer; }
-.name-react { font-size:1.25rem; margin-top:12px; }
-.cat-text-react, .loc-react { opacity:0.85; margin-top:6px; }
-.bio-react { margin-top:10px; opacity:0.9; line-height:1.45; }
-.counts-react { display:flex; gap:12px; justify-content:space-between; margin-top:12px; }
-.masonry-react { column-count:3; column-gap:16px; }
-@media(max-width:1200px){ .masonry-react{ column-count:2; } }
-@media(max-width:700px){ .masonry-react{ column-count:1; } }
-.post-tile { break-inside: avoid; margin-bottom:16px; background: rgba(255,255,255,0.04); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); position:relative; }
-.post-tile img { width:100%; display:block; object-fit:cover; height:100%; }
-.post-hover-react { position:absolute; left:0; right:0; bottom:0; padding:12px; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.6)); color:#fff; opacity:0; transform:translateY(8px); transition:all .22s; }
-.post-tile:hover .post-hover-react { opacity:1; transform:translateY(0); }
-.delete-btn-react { position:absolute; top:8px; right:8px; background:#ff4949; color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; }
-.post-form-overlay-react { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:3000; }
-.post-form-react { width:360px; background: rgba(0,0,0,0.6); padding:16px; border-radius:12px; border: 1px solid rgba(255,255,255,0.06); color:white; }
-.preview-react { width:100%; border-radius:8px; margin-top:8px; }
-.floating-edit-react { position:fixed; right:18px; bottom:18px; z-index:3000; background:#0dcaf0; color:#001; padding:10px 14px; border-radius:10px; border:none; font-weight:700; }
+/* ==============================
+   FILE: client/src/styles/InfluencerDashboard.css
+   ============================== */
+
+/* Wrapper */
+.inf-wrapper {
+  padding-top: 100px;
+  min-height: 100vh;
+  padding-bottom: 50px;
+  width: 100%;
+}
+
+.inf-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 95%;
+  display: grid;
+  grid-template-columns: 320px 1fr; /* Sidebar Fixed | Content Fluid */
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .inf-container { grid-template-columns: 1fr; }
+}
+
+/* --- SIDEBAR --- */
+.inf-sidebar {
+  /* Inherits glass-panel properties from index.css */
+  padding: 30px;
+  text-align: center;
+  position: sticky;
+  top: 100px; /* Sticks on scroll */
+}
+
+/* PFP Styles */
+.pfp-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.pfp-circle {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 4px solid var(--bg-dark);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+.pfp-edit-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.pfp-circle:hover .pfp-edit-overlay { opacity: 1; }
+
+/* Info Styles */
+.inf-name { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; color: white; }
+.inf-location { color: #94a3b8; font-size: 0.95rem; margin-bottom: 15px; }
+
+.inf-badge {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--primary);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.inf-bio {
+  color: #cbd5e1;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+/* Stats */
+.inf-stats {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 20px;
+}
+
+.stat-num { font-size: 1.4rem; font-weight: 800; color: white; }
+.stat-label { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; margin-top: 5px; }
+
+/* --- CONTENT AREA --- */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: white;
+}
+
+/* New Post Tile specific to this layout */
+.new-post-tile {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.02);
+  transition: 0.3s;
+  width: 100%;
+}
+.new-post-tile:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+}
+.plus-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+/* Edit Inputs */
+.edit-input { margin-bottom: 10px; }
+.edit-textarea { margin-bottom: 10px; min-height: 100px; }
+
+/* --- REUSED ELEMENTS --- */
+/* The FAB and Modal styles are reused from businessDashboard.css via the class names */
+/* .fab-edit, .post-form-overlay, .post-form-container */

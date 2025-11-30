@@ -1,27 +1,26 @@
-// server/config/multerConfig.js
-
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Define the storage configuration for Multer
+// Fix directory path for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Files will be saved in the 'server/uploads' directory
-        cb(null, 'server/uploads/'); 
+        // Points correctly to server/uploads/
+        cb(null, path.join(__dirname, '../uploads/')); 
     },
     filename: (req, file, cb) => {
-        // Create a unique filename: fieldname-timestamp.ext (e.g., pfp-167888888.jpg)
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
 
-// Configure Multer instance
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
-        // Accept only common image types
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {

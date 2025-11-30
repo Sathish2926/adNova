@@ -1,66 +1,74 @@
- import React from "react";
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom"; 
+import { useAuth } from "../contexts/AuthContext";
 
 const Navbar = () => {
+  const { isLoggedIn, role, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation(); // Hook to get current path
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  // Determine dashboard link based on role
+  const dashboardLink = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
+
+  // Helper to check active class
+  const isActive = (path) => location.pathname === path ? "active" : "";
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark custom-navbar">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
-            ✦adNova
-          </a>
+          <Link className="navbar-brand" to="/">✦adNova</Link>
 
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-          >
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div
-            className="collapse navbar-collapse justify-content-center"
-            id="navbarSupportedContent"
-          >
+          <div className="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0">
               <li className="nav-item">
-                <a className="nav-link active" href="#">
-                  Home
-                </a>
+                  <Link className={`nav-link ${isActive('/')}`} to="/">Home</Link>
               </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#services">
-                  Services
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#about">
-                  About Us
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#contact">
-                  Contact
-                </a>
-              </li>
+              
+              {isLoggedIn ? (
+                <>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/marketplace')}`} to="/marketplace">Find Partners</Link>
+                    </li>
+                    <li className="nav-item">
+                         <Link className={`nav-link ${isActive(dashboardLink)}`} to={dashboardLink}>My Dashboard</Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/messages')}`} to="/messages">Messages</Link>
+                    </li>
+                </>
+              ) : (
+                <>
+                    <li className="nav-item"><a className="nav-link" href="#services">Services</a></li>
+                    <li className="nav-item"><a className="nav-link" href="#about">About Us</a></li>
+                </>
+              )}
             </ul>
           </div>
 
           <div className="d-flex align-items-center">
-            <button
-              className="btn btn-outline-light me-2"
-              data-bs-toggle="modal"
-              data-bs-target="#loginModal"
-            >
-              <i className="fa-solid fa-right-to-bracket me-1"></i> Login
-            </button>
-
-            <button
-              className="btn btn-light text-dark"
-              data-bs-toggle="modal"
-              data-bs-target="#signupModal"
-            >
-              <i className="fa-solid fa-user-plus me-1"></i> Signup
-            </button>
+            {isLoggedIn ? (
+                <button className="btn btn-outline-danger" onClick={handleLogout}>
+                    Logout
+                </button>
+            ) : (
+                <>
+                    <button className="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <i className="fa-solid fa-right-to-bracket me-1"></i> Login
+                    </button>
+                    <button className="btn btn-light text-dark" data-bs-toggle="modal" data-bs-target="#signupModal">
+                    <i className="fa-solid fa-user-plus me-1"></i> Signup
+                    </button>
+                </>
+            )}
           </div>
         </div>
       </nav>
@@ -68,5 +76,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
- 

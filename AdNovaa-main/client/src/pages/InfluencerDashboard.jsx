@@ -1,262 +1,175 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext'; // 1. Import Auth
-import "../styles/InfluencerDashboard.css";
+import { useAuth } from '../contexts/AuthContext';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import Navbar from '../components/navbar';
+import "../styles/InfluencerDashboard.css"; 
 
-// Placeholder URL - Ensure your API URLs are correct
-const PROFILE_UPDATE_URL = "http://localhost:5000/api/auth/update-profile";
 const PROFILE_FETCH_URL = (userId) => `http://localhost:5000/api/auth/profile/${userId}`;
-const UPLOAD_API_URL = "http://localhost:5000/api/auth/upload-image"
-// 🚨 NOTE: You'll need a separate endpoint for file uploads!
+const PROFILE_UPDATE_URL = "http://localhost:5000/api/auth/update-profile";
+const UPLOAD_API_URL = "http://localhost:5000/api/auth/upload-image";
+const CREATE_POST_URL = "http://localhost:5000/api/posts/create"; 
+const USER_POSTS_URL = (userId) => `http://localhost:5000/api/posts/user/${userId}`;
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
 export default function InfluencerDashboard() {
-    const { userId, role } = useAuth(); // Get user ID and role
+    const { userId, role } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
-    
-    // Initial state based on your current local mock data and schema fields
-    const [profile, setProfile] = useState({
-        name: '', categories: '', location: '', bio: '',
-        subscribers: '0', followers: '0', pfp: '', 
-        // Fields for editing:
-        niche: '', // Maps to categories
-        rateCard: '', // Assuming you will add this to the profile later
-    });
-
-    const [posts, setPosts] = useState([]);
     const [editMode, setEditMode] = useState(false);
     const [showPostForm, setShowPostForm] = useState(false);
+    
+    const [profile, setProfile] = useState({ name: '', niche: '', location: '', bio: '', followers: '0', subscribers: '0', pfp: '', rateCard: '' });
+    const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
 
-    // --- FETCH PROFILE DATA ON LOAD (Dynamic Dashboard Logic) ---
+    // --- IMAGE URL HELPER ---
+    const getImgUrl = (path) => {
+        if (!path) return DEFAULT_PFP;
+        if (path.startsWith('http')) return path;
+        return `http://localhost:5000${path}`;
+    };
+
     useEffect(() => {
-        if (!userId) {
-            setIsLoading(false);
-            return;
+        AOS.init({ duration: 900 });
+        if (userId) {
+            fetch(PROFILE_FETCH_URL(userId))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+                        const inf = user.influencerProfile || {};
+                        setProfile({
+                            name: inf.displayName || user.name || "Influencer Name",
+                            niche: inf.niche || "Content Creator",
+                            location: inf.location || "Location", 
+                            bio: inf.bio || "No bio added yet.", 
+                            followers: inf.followerCount ? `${inf.followerCount}` : '0',
+                            subscribers: inf.followerCount ? `${(inf.followerCount / 1000).toFixed(1)}K` : '0',
+                            pfp: inf.pfp || DEFAULT_PFP,
+                            rateCard: inf.rateCard || '',
+                        });
+                    }
+                }).catch(err => console.error(err));
+
+            fetch(USER_POSTS_URL(userId))
+                .then(res => res.json())
+                .then(data => { if(data.success) setPosts(data.posts); })
+                .catch(err => console.error(err))
+                .finally(() => setIsLoading(false));
         }
-
-        const fetchProfile = async () => {
-            try {
-                const response = await fetch(PROFILE_FETCH_URL(userId));
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    const userData = data.user;
-                    const influencerData = userData.influencerProfile || {};
-
-                    setProfile({
-                        // Core User Info
-                        name: userData.name,
-                        location: influencerData.location || 'N/A', 
-                        bio: influencerData.bio || 'Please update your bio.', 
-                        
-                        // Influencer Profile Data
-                        niche: influencerData.niche || 'N/A',
-                        categories: influencerData.niche ? influencerData.niche.toUpperCase() : 'N/A',
-                        followers: influencerData.followerCount ? `${(influencerData.followerCount).toLocaleString()}` : '0',
-                        subscribers: influencerData.followerCount ? `${(influencerData.followerCount / 1000).toFixed(1)}K` : '0',
-                        pfp: influencerData.pfp || 'default-avatar-url.jpg',
-                        rateCard: influencerData.rateCard || '',
-                        // NOTE: You'll need a separate fetch here for posts based on IDs
-                    });
-                    
-                    // setPosts(fetched posts/portfolio here); 
-                }
-            } catch (error) {
-                console.error("Error fetching influencer profile:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchProfile();
     }, [userId]);
 
-    // --- HANDLERS ---
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setProfile(p => ({...p, pfp: URL.createObjectURL(file)}));
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('userId', userId);
+        formData.append('role', role);
+        formData.append('fieldName', 'pfp');
+        fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => { if(data.success) setProfile(p => ({...p, pfp: data.fileUrl })); });
+    };
 
-    // 🚨 TO DO: Implement File Upload Logic (Requires Multer on backend)
-  const uploadPfp = async (e) => {
-    const file = e?.target?.files?.[0];
-    if (!file) return;
-
-    // Use FormData to send the file to the server
-    const formData = new FormData();
-    formData.append('image', file); // 'image' must match the Multer key in the router: upload.single('image')
-    formData.append('userId', userId);
-    formData.append('role', role);
-    formData.append('fieldName', 'pfp'); // The field in the database to update
-
-    // Show local preview immediately (optional)
-    setProfile(p => ({...p, pfp: URL.createObjectURL(file)})); 
-
-    try {
-        const response = await fetch(UPLOAD_API_URL, {
-            method: 'POST',
-            body: formData, // Do NOT set 'Content-Type': 'multipart/form-data'; fetch does it automatically
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            // Update state with the permanent URL returned from the server
-            setProfile(p => ({...p, pfp: data.fileUrl})); 
-            alert("Profile Picture uploaded!");
-        } else {
-            alert(`Upload failed: ${data.message}`);
-        }
-    } catch (error) {
-        console.error("Upload error:", error);
-        alert("Network error during file upload.");
-    }
-};
-    const uploadPostImage = (e) => {
-        const f = e?.target?.files?.[0];
-        if (!f) return;
-        setNewPost(p=>({...p, img: URL.createObjectURL(f)}));
+    const handleNewPostImage = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('userId', userId);
+        formData.append('role', role);
+        formData.append('fieldName', 'temp_post');
+        fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => { if(data.success) setNewPost({ ...newPost, img: data.fileUrl }); });
     };
     
-    // 3. API CALL: Submit a new post/portfolio entry
-    const submitPostToAPI = async () => {
-        if (!newPost.img || !newPost.header) return;
-
-        // 🚨 IMPORTANT: You must upload the image file FIRST.
-        // Assume uploadPostImage() stores the file on the server and returns the final URL.
-        
-        // MOCK API Call for saving the post
+    const addPost = async () => {
+        if (!newPost.img) return alert("Please upload an image.");
         try {
-            // const postResponse = await fetch('/api/posts/add', { ... });
-            
-            // If successful, update local state:
-            setPosts(p => [newPost, ...p]);
-            setNewPost({ img:'', header:'', caption:''});
-            setShowPostForm(false);
-            alert("Post submitted successfully!");
-
-        } catch (error) {
-            console.error("Error submitting post:", error);
-            alert("Failed to submit post.");
-        }
-    };
-
-    // 4. API CALL: Save Profile Details
-    const handleSaveProfile = async () => {
-        setEditMode(false); // Optimistically turn off edit mode
-
-        // 🚨 NOTE: The profile state now contains fields like name, niche, location, bio, etc.
-        const updateData = {
-            userId: userId,
-            role: role,
-            // Construct the profile data payload that matches the backend schema fields (businessProfile/influencerProfile)
-            profileData: {
-                displayName: profile.name, // Use name for display name
-                niche: profile.niche,
-                location: profile.location, // Assuming you add this to the Influencer Schema
-                bio: profile.bio, // Assuming you add this to the Influencer Schema
-                // You would typically calculate followers/subscribers from external APIs, 
-                // but for now, we leave them out of the update payload.
-                rateCard: profile.rateCard,
-                pfp: profile.pfp, // This should be the final URL after uploading the file (not the local URL)
-            }
-        };
-
-        try {
-            const response = await fetch(PROFILE_UPDATE_URL, {
+            const res = await fetch(CREATE_POST_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData),
+                body: JSON.stringify({ userId, role, header: newPost.header, caption: newPost.caption, image: newPost.img })
             });
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                alert("Profile saved successfully!");
-            } else {
-                alert(`Error saving profile: ${data.message}`);
-                setEditMode(true); // Re-enable edit mode if saving failed
+            const data = await res.json();
+            if(data.success) {
+                setPosts([data.post, ...posts]);
+                setNewPost({ img:'', header:'', caption:''});
+                setShowPostForm(false);
             }
-        } catch (error) {
-            console.error("Network error saving profile:", error);
-            alert("Failed to connect to the server to save profile.");
-            setEditMode(true);
-        }
+        } catch(err) { console.error(err); }
     };
 
-
-    // 5. Update Edit Toggle to use Save Handler
-    const handleEditToggle = () => {
-        if (editMode) {
-            handleSaveProfile(); // Save when transitioning from Edit to View
-        } else {
-            setEditMode(true); // Enter Edit mode
-        }
+    const handleSaveProfile = async () => {
+        setEditMode(false);
+        const pfpToSend = profile.pfp === DEFAULT_PFP ? "" : profile.pfp;
+        try {
+            await fetch(PROFILE_UPDATE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, role, profileData: {
+                    displayName: profile.name, niche: profile.niche, location: profile.location, 
+                    bio: profile.bio, followerCount: Number(profile.followers), pfp: pfpToSend
+                }}),
+            });
+        } catch (error) { console.error(error); }
     };
-    
-    // --- JSX RENDER ---
 
-    if (isLoading) {
-        return <div className="loading-spinner">Loading Profile...</div>;
-    }
+    if (isLoading) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>Loading...</div>;
 
     return (
         <>
             <Navbar />
-            <div className='profile-wrapper-react container'>
-                <div className='profile-section-react'>
-                    <aside className='profile-left-react'>
-                        {/* PFP and Editable Inputs */}
-                        <div className='pfp-area'>
-                            <div className='pfp-box' style={{backgroundImage:`url(${profile.pfp})`}} onClick={()=>editMode && document.getElementById('pfpUpload')?.click()} />
-                            <input id='pfpUpload' type='file' hidden onChange={uploadPfp} />
+            <div className='inf-wrapper'>
+                <div className='inf-container'>
+                    <aside className='inf-sidebar glass-panel' data-aos="fade-right">
+                        <div className='pfp-container'>
+                            <div className='pfp-circle' style={{backgroundImage:`url(${getImgUrl(profile.pfp)})`}}>
+                                {editMode && (
+                                    <label className='pfp-edit-overlay'>✎ <input type='file' hidden onChange={handleImageUpload} /></label>
+                                )}
+                            </div>
                         </div>
-                        
-                        {/* Name Input */}
-                        {editMode ? (
-                            <input className='name-input' value={profile.name} onChange={(e) => setProfile(p => ({...p, name: e.target.value}))} />
-                        ) : (
-                            <h2 className='name-react'>{profile.name}</h2>
-                        )}
-                        
-                        <p className='cat-text-react'>{profile.categories}</p>
-                        
-                        {/* Location Input */}
-                        {editMode ? (
-                            <input className='input-default' value={profile.location} onChange={(e) => setProfile(p => ({...p, location: e.target.value}))} />
-                        ) : (
-                            <p className='loc-react'>📍 {profile.location}</p>
-                        )}
-
-                        {/* Bio Input */}
-                        {editMode ? (
-                            <textarea className='textarea-default' value={profile.bio} onChange={(e) => setProfile(p => ({...p, bio: e.target.value}))} />
-                        ) : (
-                            <p className='bio-react'>{profile.bio}</p>
-                        )}
-                        
-                        {/* Rate Card Input (New Field) */}
-                        {editMode && (
-                            <input className='input-default mt-2' placeholder='Rate Card Link' value={profile.rateCard} onChange={(e) => setProfile(p => ({...p, rateCard: e.target.value}))} />
-                        )}
-
-                        <div className='counts-react mt-3'>
-                            <div className='count-col'><div className='count-num'>{profile.subscribers}</div><div className='count-label'>Subscribers</div></div>
-                            <div className='count-col'><div className='count-num'>{profile.followers}</div><div className='count-label'>Followers</div></div>
+                        <div className='inf-info'>
+                            {editMode ? (
+                                <>
+                                    <input className='edit-input' value={profile.name} onChange={(e) => setProfile(p => ({...p, name: e.target.value}))} placeholder="Name" />
+                                    <input className='edit-input' value={profile.location} onChange={(e) => setProfile(p => ({...p, location: e.target.value}))} placeholder="Location" />
+                                    <input className='edit-input' value={profile.niche} onChange={(e) => setProfile(p => ({...p, niche: e.target.value}))} placeholder="Niche" />
+                                    <textarea className='edit-textarea' value={profile.bio} onChange={(e) => setProfile(p => ({...p, bio: e.target.value}))} placeholder="Bio" />
+                                    <input className='edit-input' type="number" value={profile.followers} onChange={(e) => setProfile(p => ({...p, followers: e.target.value}))} placeholder="Follower Count" />
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className='inf-name'>{profile.name}</h2>
+                                    <p className='inf-location'>📍 {profile.location}</p>
+                                    <div className='inf-badge'>{profile.niche}</div>
+                                    <p className='inf-bio'>{profile.bio}</p>
+                                </>
+                            )}
+                        </div>
+                        <div className='inf-stats'>
+                            <div className='stat-box'><div className='stat-num'>{Number(profile.followers).toLocaleString()}</div><div className='stat-label'>Followers</div></div>
+                            <div className='stat-box'><div className='stat-num'>{profile.subscribers}</div><div className='stat-label'>Subscribers</div></div>
                         </div>
                     </aside>
 
-                    <main className='posts-section-react'>
-                        <div className='posts-top-react d-flex justify-content-between align-items-center'>
-                            <h3 className='text-white'>Posts</h3>
-                            <div>
-                                {editMode && <button className='btn btn-sm btn-danger me-2' onClick={()=>setPosts([])}>Clear</button>}
-                                <button className='btn btn-sm btn-primary' onClick={()=>setShowPostForm(true)}>New Post</button>
+                    <main className='inf-content' data-aos="fade-left">
+                        <h3 className='section-title'>My Content Portfolio</h3>
+                        <div className='masonry-container'>
+                            <div className='masonry-item new-post-tile' onClick={()=>setShowPostForm(true)}>
+                                <div className='plus-icon'>+</div><div>Add New Content</div>
                             </div>
-                        </div>
-
-                        {/* ... (Posts mapping remains the same) ... */}
-                        <div className='masonry-react mt-3'>
                             {posts.map((p,i)=>(
-                                <div className='post-tile' key={i}>
-                                    <img src={p.img} alt={p.header} />
-                                    {editMode && <button className='delete-btn-react' onClick={()=>setPosts(posts.filter((_,idx)=>idx!==i))}>✕</button>}
-                                    <div className='post-hover-react'><div className='post-head-react'>{p.header}</div><div className='post-cap-react'>{p.caption}</div></div>
+                                <div className='masonry-item post-card glass-card' key={i}>
+                                    <img src={getImgUrl(p.image)} alt={p.header} />
+                                    <div className='post-overlay'>
+                                        <h5 style={{color:'white', margin:0}}>{p.header}</h5>
+                                        <small style={{color:'#e2e8f0'}}>{p.caption}</small>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -264,25 +177,21 @@ export default function InfluencerDashboard() {
                 </div>
 
                 {showPostForm && (
-                    <div className='post-form-overlay-react' onClick={()=>setShowPostForm(false)}>
-                        <div className='post-form-react' onClick={(e)=>e.stopPropagation()}>
-                            <h3>New Post</h3>
-                            <input type='file' accept='image/*' onChange={uploadPostImage} />
-                            {newPost.img && <img className='preview-react' src={newPost.img} alt='preview' />}
-                            <input className='input-default mt-2' placeholder='Header' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
-                            <input className='input-default mt-2' placeholder='Caption' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
-                            <div className='form-row-react mt-3'>
-                                <button className='btn btn-primary me-2' onClick={submitPostToAPI}>Save</button>
-                                <button className='btn btn-secondary' onClick={()=>setShowPostForm(false)}>Cancel</button>
+                    <div className='post-form-overlay' onClick={()=>setShowPostForm(false)}>
+                        <div className='post-form-container glass-panel' onClick={(e)=>e.stopPropagation()}>
+                            <h3 style={{marginBottom:'20px', color:'white'}}>Add to Portfolio</h3>
+                            <input type='file' accept='image/*' onChange={handleNewPostImage} style={{marginBottom: 15}} />
+                            {newPost.img && <img className='preview-img' src={getImgUrl(newPost.img)} alt='preview' />}
+                            <input className='edit-input' placeholder='Title' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
+                            <input className='edit-input' placeholder='Description' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
+                            <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
+                                <button className='btn-primary' style={{flex:1}} onClick={addPost}>Post</button>
+                                <button className='btn-primary' style={{flex:1, background:'transparent', border:'1px solid white'}} onClick={()=>setShowPostForm(false)}>Cancel</button>
                             </div>
                         </div>
                     </div>
                 )}
-
-                {/* 6. Updated Toggle Button */}
-                <button className='floating-edit-react' onClick={handleEditToggle}>
-                    {editMode ? 'Save' : 'Edit'}
-                </button>
+                <button className='fab-edit' onClick={() => { if(editMode) handleSaveProfile(); else setEditMode(true); }}>{editMode ? "✓" : "✎"}</button>
             </div>
         </>
     );
