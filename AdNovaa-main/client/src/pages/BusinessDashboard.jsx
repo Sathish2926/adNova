@@ -4,12 +4,14 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Navbar from "../components/navbar";
 import "../styles/businessDashboard.css"; 
+import API_BASE_URL from "../apiConfig"; // <--- IMPORT CONFIG
 
-const PROFILE_FETCH_URL = (userId) => `http://localhost:5000/api/auth/profile/${userId}`;
-const PROFILE_UPDATE_URL = "http://localhost:5000/api/auth/update-profile";
-const UPLOAD_API_URL = "http://localhost:5000/api/auth/upload-image";
-const CREATE_POST_URL = "http://localhost:5000/api/posts/create"; 
-const USER_POSTS_URL = (userId) => `http://localhost:5000/api/posts/user/${userId}`; 
+// Use Dynamic URL
+const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
+const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
+const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
+const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`; 
+const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`; 
 const DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
 export default function BusinessDashboard() {
@@ -25,7 +27,7 @@ export default function BusinessDashboard() {
   const getImgUrl = (path) => {
     if (!path) return DEFAULT_LOGO;
     if (path.startsWith('http')) return path;
-    return `http://localhost:5000${path}`;
+    return `${API_BASE_URL}${path}`; // Use Dynamic URL for local fallbacks
   };
 
   useEffect(() => { 
@@ -63,13 +65,16 @@ export default function BusinessDashboard() {
   const handleImageUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Local preview is fine immediately
     const objectUrl = URL.createObjectURL(file);
     setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: objectUrl }));
+    
     const formData = new FormData();
     formData.append('image', file);
     formData.append('userId', userId);
     formData.append('role', role);
     formData.append('fieldName', fieldName);
+    
     fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => { if(data.success) setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: data.fileUrl })); });
@@ -91,7 +96,7 @@ export default function BusinessDashboard() {
   };
 
   const addPost = async () => {
-    if (!newPost.img) return;
+    if (!newPost.img) return alert("Upload image first.");
     try {
         const res = await fetch(CREATE_POST_URL, {
             method: 'POST',
@@ -197,26 +202,23 @@ export default function BusinessDashboard() {
         </div>
         <button className="fab-edit" onClick={() => editing ? saveProfile() : setEditing(true)}>{editing ? "✓" : "✎"}</button>
         
-        {/* --- MODAL WITH FIXED FILE UPLOAD UI --- */}
         {showPostForm && (
           <div className="post-form-overlay" onClick={() => setShowPostForm(false)}>
             <div className="post-form-container glass-panel" onClick={e => e.stopPropagation()}>
                <h3 style={{marginBottom:'20px', color:'white'}}>Create New Post</h3>
-               
-<div className="file-upload-wrapper">
-    <input type="file" accept="image/*" id="inf-post-upload" hidden onChange={handleNewPostImage} />
-    <label htmlFor="inf-post-upload" className="file-upload-label">
-        {newPost.img ? (
-            <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" />
-        ) : (
-            <div className="upload-placeholder">
-                <span style={{fontSize:'2rem'}}>📁</span>
-                <span>Click to Upload Image</span>
-            </div>
-        )}
-    </label>
-</div>
-
+               <div className="file-upload-wrapper">
+                   <input type="file" accept="image/*" id="biz-post-upload" hidden onChange={handleNewPostImage} />
+                   <label htmlFor="biz-post-upload" className="file-upload-label">
+                       {newPost.img ? (
+                           <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" />
+                       ) : (
+                           <div className="upload-placeholder">
+                               <span style={{fontSize:'2rem'}}>📁</span>
+                               <span>Click to Upload Image</span>
+                           </div>
+                       )}
+                   </label>
+               </div>
                <input className="edit-mode-input" placeholder="Header" value={newPost.header} onChange={e => setNewPost({...newPost, header: e.target.value})} />
                <input className="edit-mode-input" placeholder="Caption" value={newPost.caption} onChange={e => setNewPost({...newPost, caption: e.target.value})} />
                <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>

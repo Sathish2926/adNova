@@ -7,12 +7,10 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
-
-// --- CRITICAL MISSING IMPORTS RESTORED ---
 import cron from "node-cron"; 
 import { scrapeSocials } from "./utils/socialScraper.js"; 
-// -----------------------------------------
 
+// Route Imports
 import authRoutes from "./routes/auth.js";
 import postRoutes from "./routes/posts.js"; 
 import Request from "./models/Request.js"; 
@@ -21,20 +19,39 @@ import Conversation from "./models/Conversation.js";
 import User from "./models/User.js"; 
 
 dotenv.config();
+
+// Fix directory path for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app); 
 
+// --- DYNAMIC CORS CONFIG ---
+// Allow both Localhost (for dev) and your Render Frontend (for prod)
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://adnova-frontend.onrender.com" // REPLACE THIS with your actual Render Frontend URL later
+];
+
 const io = new Server(httpServer, {
-  cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
+  cors: { 
+    origin: allowedOrigins,
+    methods: ["GET", "POST"] 
+  },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 app.use(bodyParser.json());
+
+// Serve Static Images (Fallback for old local images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Connect to MongoDB Atlas (Production DB)
 mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/adnovaDB")
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log("MongoDB connection error:", err));
@@ -42,7 +59,7 @@ mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/adnovaDB")
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes); 
 
-// Cron Job
+// --- CRON JOB: REFRESH FOLLOWERS EVERY 24 HRS ---
 cron.schedule('0 0 * * *', async () => {
     console.log("Running Daily Social Scraper...");
     try {
@@ -61,7 +78,7 @@ cron.schedule('0 0 * * *', async () => {
     } catch (e) { console.error("Cron Error", e); }
 });
 
-// Socket Logic
+// --- SOCKET LOGIC ---
 io.on("connection", (socket) => {
   socket.on("register_user", async (email) => {
     if (!email) return;
@@ -71,15 +88,23 @@ io.on("connection", (socket) => {
       const pendingRequests = await Request.find({ receiverEmail: normalizedEmail });
       socket.emit("existing_requests", pendingRequests);
       const conversations = await Conversation.find({ participants: normalizedEmail });
+      
       const formattedConversations = await Promise.all(conversations.map(async (conv) => {
         const otherUserEmail = conv.participants.find(p => p !== normalizedEmail) || normalizedEmail;
         const user = await User.findOne({ email: otherUserEmail });
         let displayName = otherUserEmail.split("@")[0];
         let displayImage = ""; 
+
         if (user) {
-            displayName = user.role === 'business' ? (user.businessProfile?.brandName || user.name) : (user.influencerProfile?.displayName || user.name);
-            displayImage = user.role === 'business' ? user.businessProfile?.logoUrl : user.influencerProfile?.pfp;
+            if (user.role === 'business') {
+                displayName = user.businessProfile?.brandName || user.name;
+                displayImage = user.businessProfile?.logoUrl;
+            } else {
+                displayName = user.influencerProfile?.displayName || user.name;
+                displayImage = user.influencerProfile?.pfp;
+            }
         }
+
         return {
           id: conv._id,
           email: otherUserEmail,
@@ -136,7 +161,10 @@ io.on("connection", (socket) => {
     await Request.findByIdAndDelete(requestId);
     
     const acceptorUser = await User.findOne({ email: myEmail });
-    let acceptorImage = acceptorUser ? (acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp) : "";
+    let acceptorImage = "";
+    if(acceptorUser) {
+        acceptorImage = acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp;
+    }
 
     socket.to(senderEmail).emit("request_accepted", { email: myEmail, name: acceptorName, image: acceptorImage, conversationId: newConv._id });
     socket.emit("request_accepted_confirm", { email: senderEmail, conversationId: newConv._id });

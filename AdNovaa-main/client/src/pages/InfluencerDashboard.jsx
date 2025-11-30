@@ -4,13 +4,14 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Navbar from '../components/navbar';
 import "../styles/InfluencerDashboard.css"; 
+import API_BASE_URL from "../apiConfig"; // <--- IMPORT CONFIG
 
-const PROFILE_FETCH_URL = (userId) => `http://localhost:5000/api/auth/profile/${userId}`;
-const PROFILE_UPDATE_URL = "http://localhost:5000/api/auth/update-profile";
-const UPLOAD_API_URL = "http://localhost:5000/api/auth/upload-image";
-const CREATE_POST_URL = "http://localhost:5000/api/posts/create"; 
-const USER_POSTS_URL = (userId) => `http://localhost:5000/api/posts/user/${userId}`;
-const REFRESH_STATS_URL = "http://localhost:5000/api/auth/refresh-socials";
+const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
+const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
+const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
+const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`; 
+const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`;
+const REFRESH_STATS_URL = `${API_BASE_URL}/api/auth/refresh-socials`;
 
 const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
@@ -22,8 +23,7 @@ export default function InfluencerDashboard() {
     const [showPostForm, setShowPostForm] = useState(false);
     
     const [profile, setProfile] = useState({
-        name: '', niche: '', location: '', bio: '', followers: 0, 
-        pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
+        name: '', niche: '', location: '', bio: '', followers: 0, pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
     });
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
@@ -37,7 +37,7 @@ export default function InfluencerDashboard() {
     const getImgUrl = (path) => {
         if (!path) return DEFAULT_PFP;
         if (path.startsWith('http')) return path;
-        return `http://localhost:5000${path}`;
+        return `${API_BASE_URL}${path}`;
     };
 
     useEffect(() => {
@@ -49,7 +49,6 @@ export default function InfluencerDashboard() {
                     if (data.success) {
                         const user = data.user;
                         const inf = user.influencerProfile || {};
-                        
                         setProfile({
                             name: inf.displayName || user.name || "Influencer Name",
                             niche: inf.niche || "Content Creator",
@@ -119,7 +118,7 @@ export default function InfluencerDashboard() {
     };
     
     const addPost = async () => {
-        if (!newPost.img) return;
+        if (!newPost.img) return alert("Please upload an image.");
         try {
             const res = await fetch(CREATE_POST_URL, {
                 method: 'POST',
@@ -193,7 +192,7 @@ export default function InfluencerDashboard() {
                                     <div className='inf-badge'>{profile.niche}</div>
                                     <p className='inf-bio'>{profile.bio}</p>
 
-                                    {/* --- NEW: VERIFIED SOURCES DISPLAY --- */}
+                                    {/* --- VERIFIED SOURCES DISPLAY --- */}
                                     {(profile.instagramHandle || profile.youtubeHandle) && (
                                         <div style={{textAlign:'center', marginTop:'15px'}}>
                                             <span className="social-label">Verified Sources</span>
@@ -251,14 +250,24 @@ export default function InfluencerDashboard() {
                     <div className='post-form-overlay' onClick={()=>setShowPostForm(false)}>
                         <div className='post-form-container glass-panel' onClick={(e)=>e.stopPropagation()}>
                             <h3 style={{marginBottom:'20px', color:'white'}}>Add to Portfolio</h3>
+                            
+                            {/* FIXED FILE UPLOAD UI */}
                             <div className="file-upload-wrapper">
                                 <input type="file" accept="image/*" id="inf-post-upload" hidden onChange={handleNewPostImage} />
                                 <label htmlFor="inf-post-upload" className="file-upload-label">
-                                    {newPost.img ? <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" /> : <div className="upload-placeholder"><span style={{fontSize:'2rem'}}>📁</span><span>Click to Upload Image</span></div>}
+                                    {newPost.img ? (
+                                        <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" />
+                                    ) : (
+                                        <div className="upload-placeholder">
+                                            <span style={{fontSize:'2rem'}}>📁</span><span>Click to Upload Image</span>
+                                        </div>
+                                    )}
                                 </label>
                             </div>
+                            
                             <input className='edit-input' placeholder='Title' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
                             <input className='edit-input' placeholder='Description' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
+                            
                             <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
                                 <button className='btn-primary' style={{flex:1}} onClick={addPost}>Post</button>
                                 <button className='btn-primary' style={{flex:1, background:'transparent', border:'1px solid white'}} onClick={()=>setShowPostForm(false)}>Cancel</button>

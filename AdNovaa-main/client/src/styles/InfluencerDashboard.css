@@ -58,6 +58,7 @@ html, body {
   border-radius: 12px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6;
 }
 
+/* --- STATS SECTION --- */
 .inf-stats { 
     display: flex; 
     justify-content: center; /* Center the box */
@@ -128,6 +129,47 @@ html, body {
     to { transform: rotate(360deg); }
 }
 
+/* --- CONNECTED SOCIALS --- */
+.connected-socials {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.social-badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: transform 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.social-badge:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+.social-badge.insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.social-badge.yt { background: #FF0000; }
+
+.social-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 5px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
 .section-title {
   font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
   padding-bottom: 10px; color: white; font-weight: 700;
@@ -165,7 +207,7 @@ html, body {
 }
 .fab-edit:hover { transform: scale(1.1); }
 
-/* --- MODAL --- */
+/* --- MODAL FIXES --- */
 .post-form-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
   display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -173,7 +215,9 @@ html, body {
 .post-form-container {
   width: 100%; max-width: 500px; padding: 30px; background: #0f172a;
   border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; flex-direction: column;
-  max-height: 85vh; overflow-y: auto;
+  /* FIXED SCROLL AND HEIGHT */
+  max-height: 85vh; 
+  overflow-y: auto;
 }
 .post-form-container::-webkit-scrollbar { width: 6px; }
 .post-form-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
@@ -188,54 +232,19 @@ html, body {
 }
 .file-upload-label:hover { background: rgba(255, 255, 255, 0.1); border-color: #6366F1; }
 .upload-placeholder { display: flex; flex-direction: column; align-items: center; color: #94a3b8; gap: 10px; }
-.preview-img { width: 100%; height: 100%; object-fit: cover; display: block; margin: 0; border-radius: 0; }
+
+/* FIXED PREVIEW */
+.preview-img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    display: block; 
+    margin: 0; 
+    border-radius: 0; 
+}
 
 .edit-input, .edit-textarea { 
   margin-bottom: 12px; background: #020617 !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important;
 }
+.edit-textarea { min-height: 100px; }
 .post-form-container button { border-radius: 8px !important; padding: 12px; font-weight: 600; }
-.connected-socials {
-    margin-top: 15px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-}
-
-.social-badge {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: white;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    transition: transform 0.2s;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.social-badge:hover {
-    transform: translateY(-2px);
-    color: white;
-}
-
-/* Specific Platform Colors */
-.social-badge.insta {
-    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-}
-
-.social-badge.yt {
-    background: #FF0000;
-}
-
-.social-label {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-bottom: 5px;
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}

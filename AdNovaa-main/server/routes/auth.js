@@ -6,7 +6,32 @@ import { scrapeSocials } from "../utils/socialScraper.js";
 
 const router = express.Router();
 
-// --- SIGNUP ROUTE (UPDATED FOR AUTO-LOGIN) ---
+// --- UPLOAD IMAGE (DEBUGGING ADDED) ---
+router.post("/upload-image", upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            console.error("Upload Error: No file received from Multer.");
+            return res.status(400).json({ success: false, message: "No file uploaded." });
+        }
+        
+        const { userId, fieldName, role } = req.body; 
+        
+        // This MUST be a Cloudinary URL (starts with https://res.cloudinary...)
+        const fileUrl = req.file.path; 
+        console.log("Cloudinary Upload Success:", fileUrl);
+        
+        let updatePath = role === 'business' ? `businessProfile.${fieldName}` : `influencerProfile.${fieldName}`; 
+        
+        await User.findByIdAndUpdate(userId, { $set: { [updatePath]: fileUrl } }, { new: true });
+
+        res.json({ success: true, fileUrl });
+    } catch (err) {
+        console.error("Cloudinary/Multer Error:", err);
+        res.status(500).json({ success: false, message: "Upload failed: " + err.message });
+    }
+});
+
+// --- SIGNUP ---
 router.post("/signup", async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
@@ -21,24 +46,17 @@ router.post("/signup", async (req, res) => {
         const user = new User({ name, email, password: hashedPassword, role, ...profileData });
         await user.save();
 
-        // RETURN ALL DATA NEEDED FOR CONTEXT LOGIN
         res.json({ 
-            success: true, 
-            message: "User registered!", 
-            role: user.role, 
-            isProfileComplete: user.isProfileComplete, 
-            userId: user._id,
-            name: user.name,   // <--- Added
-            email: user.email  // <--- Added
+            success: true, message: "User registered!", 
+            role: user.role, isProfileComplete: user.isProfileComplete, 
+            userId: user._id, name: user.name, email: user.email 
         });
     } catch (err) {
-        console.error("Signup Error:", err);
         res.status(500).json({ success: false, message: "Signup failed." });
     }
 });
 
-// ... (Keep Login, Update, Upload, Get Profile, Find Partners routes exactly the same) ...
-// --- LOGIN ROUTE ---
+// --- LOGIN ---
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -59,7 +77,7 @@ router.post("/login", async (req, res) => {
                             'influencerProfile.lastSocialUpdate': new Date()
                         });
                     }
-                }).catch(err => console.error("Login Scrape Failed:", err.message));
+                }).catch(err => console.error("Login Scrape error:", err.message));
             }
         }
 
@@ -69,16 +87,21 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// --- PROFILE UPDATE ---
+// --- UPDATE PROFILE ---
 router.post("/update-profile", async (req, res) => {
     try {
         const { userId, role, profileData } = req.body;
         let updateQuery = {};
-        if (role === 'business') updateQuery = { $set: { businessProfile: profileData, isProfileComplete: true } };
-        else if (role === 'influencer') updateQuery = { $set: { influencerProfile: profileData, isProfileComplete: true } };
+        
+        if (role === 'business') {
+            updateQuery = { $set: { businessProfile: profileData, isProfileComplete: true } };
+        } else if (role === 'influencer') {
+            updateQuery = { $set: { influencerProfile: profileData, isProfileComplete: true } };
+        }
 
         const user = await User.findByIdAndUpdate(userId, updateQuery, { new: true });
 
+        // Trigger Scrape
         if (role === 'influencer') {
             const ig = profileData.instagramHandle;
             const yt = profileData.youtubeHandle;
@@ -90,26 +113,14 @@ router.post("/update-profile", async (req, res) => {
                             'influencerProfile.lastSocialUpdate': new Date()
                         });
                     }
-                }).catch(err => console.error(err));
+                }).catch(err => console.error("Scrape failed:", err.message));
             }
         }
+
         res.json({ success: true, user });
     } catch (err) {
+        console.error("Update Error:", err);
         res.status(500).json({ success: false, message: err.message });
-    }
-});
-
-// --- UPLOAD ---
-router.post("/upload-image", upload.single('image'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded." });
-        const { userId, fieldName, role } = req.body; 
-        const fileUrl = `/uploads/${req.file.filename}`;
-        let updatePath = role === 'business' ? `businessProfile.${fieldName}` : `influencerProfile.${fieldName}`; 
-        await User.findByIdAndUpdate(userId, { $set: { [updatePath]: fileUrl } }, { new: true });
-        res.json({ success: true, fileUrl });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Upload failed." });
     }
 });
 
@@ -154,20 +165,14 @@ router.post("/refresh-socials", async (req, res) => {
     try {
         const { userId } = req.body;
         const user = await User.findById(userId);
-        
-        if (!user || user.role !== 'influencer') {
-            return res.status(400).json({ success: false, message: "Invalid user." });
-        }
+        if (!user || user.role !== 'influencer') return res.status(400).json({ success: false, message: "Invalid user." });
 
         const ig = user.influencerProfile?.instagramHandle;
         const yt = user.influencerProfile?.youtubeHandle;
 
-        if (!ig && !yt) {
-            return res.json({ success: false, message: "No handles found." });
-        }
+        if (!ig && !yt) return res.json({ success: false, message: "No handles found." });
 
         const count = await scrapeSocials(ig, yt);
-
         if (count > 0) {
             user.influencerProfile.followerCount = count;
             user.influencerProfile.lastSocialUpdate = new Date();
@@ -176,9 +181,7 @@ router.post("/refresh-socials", async (req, res) => {
         } else {
             return res.json({ success: false, message: "Scrape found 0." });
         }
-
     } catch (err) {
-        console.error("Refresh Error:", err);
         res.status(500).json({ success: false, message: "Server error." });
     }
 });

@@ -4,14 +4,12 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// 1. Create Post
 router.post("/create", async (req, res) => {
     try {
         const { userId, header, caption, image, role } = req.body;
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-        // Get Profile Image
         let authorImage = role === 'business' ? user.businessProfile?.logoUrl : user.influencerProfile?.pfp;
         let authorLocation = role === 'business' ? user.businessProfile?.location : user.influencerProfile?.location;
 
@@ -21,7 +19,7 @@ router.post("/create", async (req, res) => {
             authorRole: role,
             authorImage: authorImage || "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg",
             authorLocation: authorLocation || "Global",
-            image, // This expects a URL like "/uploads/filename.jpg"
+            image, // This will now be the Cloudinary URL sent from frontend
             header,
             caption
         });
@@ -33,20 +31,15 @@ router.post("/create", async (req, res) => {
     }
 });
 
-// 2. Get Feed (Filter Own Posts & Sort by Location)
+// ... (Keep existing GET routes) ...
 router.get("/feed", async (req, res) => {
     try {
-        const { userLocation, userId } = req.query; // <--- Get userId from query
-
-        // Filter: Exclude posts where authorId == userId
+        const { userLocation, userId } = req.query;
         let query = {};
-        if (userId) {
-            query.authorId = { $ne: userId };
-        }
+        if (userId) query.authorId = { $ne: userId };
 
         let posts = await Post.find(query).sort({ createdAt: -1 });
 
-        // Location Priority Sort
         if (userLocation) {
             const lowerUserLoc = userLocation.toLowerCase().trim();
             posts.sort((a, b) => {
@@ -59,14 +52,12 @@ router.get("/feed", async (req, res) => {
                 return 0;
             });
         }
-
         res.json({ success: true, posts });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// 3. Get User Posts
 router.get("/user/:userId", async (req, res) => {
     try {
         const posts = await Post.find({ authorId: req.params.userId }).sort({ createdAt: -1 });

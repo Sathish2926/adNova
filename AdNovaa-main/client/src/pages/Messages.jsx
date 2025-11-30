@@ -4,8 +4,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom"; 
 import Navbar from "../components/navbar"; 
 import "./messages.css";
+import API_BASE_URL from "../apiConfig"; 
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = API_BASE_URL;
 const socket = io.connect(SOCKET_URL);
 
 // Helper for Encryption
