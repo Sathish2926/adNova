@@ -1,9 +1,14 @@
+// ==============================
+// FILE: client/src/components/loginModal.jsx
+// ==============================
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext"; 
+// CHANGED: Import Global API Config
+import API_BASE_URL from "../apiConfig";
 
-const LOGIN_API_URL = "http://localhost:5000/api/auth/login"; 
-const FORGOT_PASSWORD_API_URL = "http://localhost:5000/api/auth/forgot-password";
+const LOGIN_API_URL = `${API_BASE_URL}/api/auth/login`; 
+const FORGOT_PASSWORD_API_URL = `${API_BASE_URL}/api/auth/forgot-password`;
 
 const LoginModal = () => {
   const [email, setEmail] = useState("");
@@ -14,8 +19,8 @@ const LoginModal = () => {
   const [resetMessageType, setResetMessageType] = useState(""); // 'success' or 'error'
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const navigate = useNavigate(); 
-  const { login } = useAuth(); 
-  
+  const { login } = useAuth();
+
   const loginUser = async (credentials) => {
     try {
       const response = await fetch(LOGIN_API_URL, {
@@ -23,14 +28,13 @@ const LoginModal = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
-
       const data = await response.json(); 
 
       if (!response.ok) {
         const errorMessage = data.message || `Login failed. Status: ${response.status}.`;
         throw new Error(errorMessage);
       }
-      return { success: true, ...data }; 
+      return { success: true, ...data };
     } catch (error) {
       console.error("API Login Error:", error.message);
       return { success: false, message: error.message };
@@ -40,27 +44,32 @@ const LoginModal = () => {
   const closeBootstrapModal = () => {
     try {
         const modalElement = document.getElementById('loginModal');
+        // Try Bootstrap instance method first
         if (modalElement && window.bootstrap && window.bootstrap.Modal) {
-            const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
-            modal.hide();
-        } else {
-            // Fallback DOM removal if instance not found
-            if(modalElement) {
-                modalElement.classList.remove('show');
-                modalElement.style.display = 'none';
-                document.body.classList.remove('modal-open');
-                const backdrop = document.querySelector('.modal-backdrop');
-                if(backdrop) backdrop.remove();
+            const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+            if(modalInstance) modalInstance.hide();
+            else {
+                // If no instance, create one to hide it cleanly
+                new window.bootstrap.Modal(modalElement).hide();
             }
+        } else if(modalElement) {
+             // Fallback DOM manipulation
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = ''; 
+            document.body.style.paddingRight = '';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if(backdrop) backdrop.remove();
         }
     } catch (err) {
         console.error("Error closing modal:", err);
     }
   };
 
-const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) return; // Silent return
+    if (!email || !password) return; 
 
     const response = await loginUser({ email, password });
     if (response.success) {
@@ -71,12 +80,12 @@ const handleLogin = async (e) => {
       navigate(dashboardPath, { replace: true });
     } else {
       console.error("Login failed: " + response.message);
+      alert(response.message); // Added user feedback
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    
     if (!forgotPasswordEmail) {
       setResetMessage("Please enter your email address.");
       setResetMessageType("error");
@@ -92,7 +101,6 @@ const handleLogin = async (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
-
       const data = await response.json();
 
       if (response.ok) {

@@ -1,3 +1,6 @@
+// ==============================
+// FILE: server/models/User.js
+// ==============================
 import mongoose from "mongoose";
 
 const emptyStringToNull = (v) => (v === '' ? undefined : v);
@@ -5,6 +8,7 @@ const emptyStringToNull = (v) => (v === '' ? undefined : v);
 const businessProfileSchema = new mongoose.Schema({
     brandName: { type: String, trim: true, set: emptyStringToNull },
     industry: { type: String, trim: true, set: emptyStringToNull },
+    niches: [{ type: String }], 
     websiteUrl: { type: String, trim: true, set: emptyStringToNull },
     location: { type: String, trim: true, set: emptyStringToNull },
     ownerName: { type: String, trim: true }, 
@@ -18,17 +22,20 @@ const businessProfileSchema = new mongoose.Schema({
 
 const influencerProfileSchema = new mongoose.Schema({
     displayName: { type: String, trim: true, set: emptyStringToNull },
-    niche: { type: String, trim: true, set: emptyStringToNull },
+    niches: [{ type: String }], 
+    niche: { type: String, trim: true, set: emptyStringToNull }, 
     location: { type: String, trim: true, set: emptyStringToNull },
     bio: { type: String, trim: true, set: emptyStringToNull },
     pfp: { type: String, trim: true, set: emptyStringToNull },
     coverUrl: { type: String, trim: true, set: emptyStringToNull },
     
-    // --- NEW SOCIAL FIELDS ---
+    // CHANGED: Added phoneNumber here to fix data loss
+    phoneNumber: { type: String, trim: true }, 
+
     instagramHandle: { type: String, trim: true },
     youtubeHandle: { type: String, trim: true },
     
-    followerCount: { type: Number, default: 0 }, // Total combined
+    followerCount: { type: Number, default: 0 },
     lastSocialUpdate: { type: Date, default: null },
     
     rateCard: { type: String },

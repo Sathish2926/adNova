@@ -1,19 +1,28 @@
+// ==============================
+// FILE: client/src/pages/InfluencerDashboard.jsx
+// ==============================
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Navbar from '../components/navbar';
 import "../styles/InfluencerDashboard.css"; 
-import API_BASE_URL from "../apiConfig"; // <--- IMPORT CONFIG
+import API_BASE_URL from "../apiConfig";
 
 const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
 const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
 const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
-const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`; 
+const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`;
 const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`;
 const REFRESH_STATS_URL = `${API_BASE_URL}/api/auth/refresh-socials`;
 
 const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
+const COMMON_NICHES = [
+    "Fashion", "Beauty", "Tech", "Gaming", "Travel", "Food", 
+    "Fitness", "Health", "Lifestyle", "Parenting", "Business", 
+    "Finance", "Education", "Entertainment", "Music", "Art"
+];
 
 export default function InfluencerDashboard() {
     const { userId, role } = useAuth();
@@ -23,10 +32,12 @@ export default function InfluencerDashboard() {
     const [showPostForm, setShowPostForm] = useState(false);
     
     const [profile, setProfile] = useState({
-        name: '', niche: '', location: '', bio: '', followers: 0, pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
+        name: '', niche: '', niches: [], location: '', bio: '', followers: 0, pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
     });
+    
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
+    const [customNiche, setCustomNiche] = useState(""); 
 
     const formatCompactNumber = (number) => {
         const num = Number(number);
@@ -40,8 +51,11 @@ export default function InfluencerDashboard() {
         return `${API_BASE_URL}${path}`;
     };
 
+    // --- INITIAL DATA FETCH & AOS SETUP ---
     useEffect(() => {
-        AOS.init({ duration: 900 });
+        // Initialize AOS with a slight delay to ensure DOM is ready
+        AOS.init({ duration: 900, once: true }); 
+        
         if (userId) {
             fetch(PROFILE_FETCH_URL(userId))
                 .then(res => res.json())
@@ -52,6 +66,7 @@ export default function InfluencerDashboard() {
                         setProfile({
                             name: inf.displayName || user.name || "Influencer Name",
                             niche: inf.niche || "Content Creator",
+                            niches: inf.niches || [], 
                             location: inf.location || "Location", 
                             bio: inf.bio || "No bio added yet.", 
                             followers: inf.followerCount || 0,
@@ -61,7 +76,8 @@ export default function InfluencerDashboard() {
                             youtubeHandle: inf.youtubeHandle || ''
                         });
                     }
-                }).catch(err => console.error(err));
+                })
+                .catch(err => console.error(err));
 
             fetch(USER_POSTS_URL(userId))
                 .then(res => res.json())
@@ -70,6 +86,36 @@ export default function InfluencerDashboard() {
                 .finally(() => setIsLoading(false));
         }
     }, [userId]);
+
+    // --- FIX: Refresh AOS when data changes (Prevents invisible content on refresh) ---
+    useEffect(() => {
+        setTimeout(() => {
+            AOS.refresh();
+        }, 500); // Small delay to allow React to render elements
+    }, [profile, posts, editMode]);
+
+    const toggleNiche = (nicheToAdd) => {
+        setProfile(prev => {
+            const exists = prev.niches.includes(nicheToAdd);
+            let newNiches;
+            if (exists) {
+                newNiches = prev.niches.filter(n => n !== nicheToAdd);
+            } else {
+                if (prev.niches.length >= 5) return prev; 
+                newNiches = [...prev.niches, nicheToAdd];
+            }
+            return { ...prev, niches: newNiches };
+        });
+    };
+
+    const addCustomNiche = (e) => {
+        e.preventDefault();
+        if (customNiche && !profile.niches.includes(customNiche)) {
+            if (profile.niches.length >= 5) return alert("Max 5 niches allowed.");
+            setProfile(prev => ({ ...prev, niches: [...prev.niches, customNiche] }));
+            setCustomNiche("");
+        }
+    };
 
     const handleRefreshStats = async () => {
         setIsRefreshing(true);
@@ -86,8 +132,8 @@ export default function InfluencerDashboard() {
             } else {
                 alert(data.message);
             }
-        } catch (err) { console.error(err); } 
-        finally { setIsRefreshing(false); }
+        } catch (err) { console.error(err);
+        } finally { setIsRefreshing(false); }
     };
 
     const handleImageUpload = (e) => {
@@ -137,14 +183,14 @@ export default function InfluencerDashboard() {
     const handleSaveProfile = async () => {
         setEditMode(false);
         const pfpToSend = profile.pfp === DEFAULT_PFP ? "" : profile.pfp;
-        
         try {
             await fetch(PROFILE_UPDATE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, role, profileData: {
                     displayName: profile.name, 
-                    niche: profile.niche, 
+                    niche: profile.niches[0] || "",
+                    niches: profile.niches,
                     location: profile.location, 
                     bio: profile.bio, 
                     pfp: pfpToSend,
@@ -163,7 +209,8 @@ export default function InfluencerDashboard() {
             <Navbar />
             <div className='inf-wrapper'>
                 <div className='inf-container'>
-                    <aside className='inf-sidebar glass-panel' data-aos="fade-right">
+                    {/* Added key={editMode} to force re-render on mode switch which helps AOS */}
+                    <aside className='inf-sidebar glass-panel' data-aos="fade-right" key={`sidebar-${editMode}`}>
                         <div className='pfp-container'>
                             <div className='pfp-circle' style={{backgroundImage:`url(${getImgUrl(profile.pfp)})`}}>
                                 {editMode && (
@@ -171,28 +218,91 @@ export default function InfluencerDashboard() {
                                 )}
                             </div>
                         </div>
+
                         <div className='inf-info'>
                             {editMode ? (
                                 <>
                                     <input className='edit-input' value={profile.name} onChange={(e) => setProfile(p => ({...p, name: e.target.value}))} placeholder="Name" />
                                     <input className='edit-input' value={profile.location} onChange={(e) => setProfile(p => ({...p, location: e.target.value}))} placeholder="Location" />
-                                    <input className='edit-input' value={profile.niche} onChange={(e) => setProfile(p => ({...p, niche: e.target.value}))} placeholder="Niche" />
+                                    
+                                    {/* --- EDIT NICHES UI (FIXED COLORS) --- */}
+                                    <div style={{textAlign: 'left', marginBottom: '15px'}}>
+                                        <label style={{fontSize:'0.8rem', color:'#94a3b8', display:'block', marginBottom:'5px'}}>Niches (Max 5)</label>
+                                        <div style={{display:'flex', flexWrap:'wrap', gap:'5px', marginBottom:'10px'}}>
+                                            {COMMON_NICHES.map(n => (
+                                                <span 
+                                                    key={n} 
+                                                    onClick={() => toggleNiche(n)}
+                                                    style={{
+                                                        fontSize:'0.75rem', 
+                                                        padding:'4px 8px', 
+                                                        borderRadius:'12px', 
+                                                        cursor:'pointer',
+                                                        // FIX: Background White, Text Black when unselected
+                                                        background: profile.niches.includes(n) ? '#6366F1' : 'white',
+                                                        color: profile.niches.includes(n) ? 'white' : 'black',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        fontWeight: '600'
+                                                    }}
+                                                >
+                                                    {n}
+                                                </span>
+                                            ))}
+                                            {profile.niches.filter(n => !COMMON_NICHES.includes(n)).map(n => (
+                                                 <span 
+                                                 key={n} 
+                                                 onClick={() => toggleNiche(n)}
+                                                 style={{
+                                                     fontSize:'0.75rem', 
+                                                     padding:'4px 8px', 
+                                                     borderRadius:'12px', 
+                                                     cursor:'pointer',
+                                                     background: '#6366F1',
+                                                     color: 'white',
+                                                     border: '1px solid rgba(255,255,255,0.1)'
+                                                 }}
+                                             >
+                                                 {n} ✕
+                                             </span>
+                                            ))}
+                                        </div>
+                                        <div style={{display:'flex', gap:'5px'}}>
+                                            <input 
+                                                className='edit-input' 
+                                                style={{marginBottom:0, fontSize:'0.8rem'}} 
+                                                placeholder="Add custom niche..." 
+                                                value={customNiche} 
+                                                onChange={e => setCustomNiche(e.target.value)}
+                                            />
+                                            <button type='button' className='btn-primary' style={{padding:'5px 10px', fontSize:'0.8rem'}} onClick={addCustomNiche}>Add</button>
+                                        </div>
+                                    </div>
+                                    
                                     <textarea className='edit-textarea' value={profile.bio} onChange={(e) => setProfile(p => ({...p, bio: e.target.value}))} placeholder="Bio" />
                                     
                                     <div style={{marginTop:'15px', borderTop:'1px solid rgba(255,255,255,0.1)', paddingTop:'10px'}}>
                                         <label style={{fontSize:'0.8rem', color:'#94a3b8', display:'block', marginBottom:'5px'}}>Social Handles (No @)</label>
-                                        <input className='edit-input' value={profile.instagramHandle} onChange={(e) => setProfile(p => ({...p, instagramHandle: e.target.value}))} placeholder="Instagram (e.g. adnova)" />
-                                        <input className='edit-input' value={profile.youtubeHandle} onChange={(e) => setProfile(p => ({...p, youtubeHandle: e.target.value}))} placeholder="YouTube (e.g. adnova_official)" />
+                                        <input className='edit-input' value={profile.instagramHandle} onChange={(e) => setProfile(p => ({...p, instagramHandle: e.target.value}))} placeholder="Instagram" />
+                                        <input className='edit-input' value={profile.youtubeHandle} onChange={(e) => setProfile(p => ({...p, youtubeHandle: e.target.value}))} placeholder="YouTube" />
                                     </div>
                                 </>
                             ) : (
                                 <>
                                     <h2 className='inf-name'>{profile.name}</h2>
                                     <p className='inf-location'>📍 {profile.location}</p>
-                                    <div className='inf-badge'>{profile.niche}</div>
+                                    
+                                    <div style={{display:'flex', flexWrap:'wrap', gap:'8px', justifyContent:'center', marginBottom:'20px'}}>
+                                        {profile.niches && profile.niches.length > 0 ? (
+                                            profile.niches.map((n, i) => (
+                                                <span key={i} className='inf-badge' style={{marginBottom:0}}>{n}</span>
+                                            ))
+                                        ) : (
+                                            <span className='inf-badge'>{profile.niche || "Content Creator"}</span>
+                                        )}
+                                    </div>
+
                                     <p className='inf-bio'>{profile.bio}</p>
 
-                                    {/* --- VERIFIED SOURCES DISPLAY --- */}
                                     {(profile.instagramHandle || profile.youtubeHandle) && (
                                         <div style={{textAlign:'center', marginTop:'15px'}}>
                                             <span className="social-label">Verified Sources</span>
@@ -250,8 +360,6 @@ export default function InfluencerDashboard() {
                     <div className='post-form-overlay' onClick={()=>setShowPostForm(false)}>
                         <div className='post-form-container glass-panel' onClick={(e)=>e.stopPropagation()}>
                             <h3 style={{marginBottom:'20px', color:'white'}}>Add to Portfolio</h3>
-                            
-                            {/* FIXED FILE UPLOAD UI */}
                             <div className="file-upload-wrapper">
                                 <input type="file" accept="image/*" id="inf-post-upload" hidden onChange={handleNewPostImage} />
                                 <label htmlFor="inf-post-upload" className="file-upload-label">
@@ -264,10 +372,8 @@ export default function InfluencerDashboard() {
                                     )}
                                 </label>
                             </div>
-                            
                             <input className='edit-input' placeholder='Title' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
                             <input className='edit-input' placeholder='Description' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
-                            
                             <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
                                 <button className='btn-primary' style={{flex:1}} onClick={addPost}>Post</button>
                                 <button className='btn-primary' style={{flex:1, background:'transparent', border:'1px solid white'}} onClick={()=>setShowPostForm(false)}>Cancel</button>

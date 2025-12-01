@@ -1,3 +1,6 @@
+// ==============================
+// FILE: client/src/pages/Messages.jsx
+// ==============================
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import { useAuth } from "../contexts/AuthContext"; 
@@ -6,21 +9,20 @@ import Navbar from "../components/navbar";
 import "./messages.css";
 import API_BASE_URL from "../apiConfig"; 
 
-const SOCKET_URL = API_BASE_URL;
-const socket = io.connect(SOCKET_URL);
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
-// Helper for Encryption
 const SimpleCrypto = {
   encrypt: (text, key) => { try { return btoa(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('')); } catch (e) { return text; } },
   decrypt: (encoded, key) => { try { return atob(encoded).split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join(''); } catch (e) { return "**Error**"; } }
 };
 
-const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
-
 export default function Messages() {
   const { name = "User", email = "", isLoggedIn, userId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const socketRef = useRef();
+  const activeChatRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState("chats");
   const [contacts, setContacts] = useState([]);
@@ -35,11 +37,10 @@ export default function Messages() {
 
   const generateRoomId = (email1, email2) => [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
 
-  // --- HELPER: Resolve Image URL ---
   const getImgUrl = (path) => {
       if (!path || path === "") return DEFAULT_PFP;
       if (path.startsWith('http')) return path;
-      return `http://localhost:5000${path}`;
+      return `${API_BASE_URL}${path}`;
   };
 
   const handleImgError = (e) => {
@@ -47,10 +48,13 @@ export default function Messages() {
       e.target.src = DEFAULT_PFP;
   };
 
-  // --- 0. FETCH MY IMAGE ---
+  useEffect(() => {
+    activeChatRef.current = currentChat;
+  }, [currentChat]);
+
   useEffect(() => {
       if(userId) {
-          fetch(`http://localhost:5000/api/auth/profile/${userId}`)
+          fetch(`${API_BASE_URL}/api/auth/profile/${userId}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
@@ -61,7 +65,6 @@ export default function Messages() {
       }
   }, [userId, role]);
 
-  // --- FIXED: useCallback to resolve dependency warning ---
   const updateContactToConnected = useCallback((data) => {
      setContacts(prev => {
          const newContact = {
@@ -77,13 +80,11 @@ export default function Messages() {
          return [newContact, ...filtered];
      });
      
-     // If we are currently viewing the pending chat, update it
-     if (currentChat && currentChat.email === data.email) {
+     if (activeChatRef.current && activeChatRef.current.email === data.email) {
          setCurrentChat(prev => ({ ...prev, role: "connected" }));
      }
-  }, [currentChat]);
+  }, []);
 
-  // --- 1. HANDLE "INITIATE CHAT" ---
   useEffect(() => {
     if (location.state && location.state.initiateChat) {
         const targetEmail = location.state.initiateChat.toLowerCase();
@@ -104,17 +105,21 @@ export default function Messages() {
              setShowInviteForm(true);
         }
     }
-  }, [location, contacts, navigate]); 
+  }, [location, contacts, navigate]);
 
-  // --- 2. SOCKET SETUP ---
   useEffect(() => {
     if (isLoggedIn && email) {
+      socketRef.current = io.connect(API_BASE_URL);
+      const socket = socketRef.current;
+
       const myEmail = email.toLowerCase();
       const register = () => socket.emit("register_user", myEmail);
       register();
 
       socket.on("connect", register);
+
       socket.on("existing_requests", (data) => setRequests(data.map(r => ({ id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp }))));
+      
       socket.on("existing_conversations", (data) => setContacts(data.map(c => ({ ...c, role: "connected" }))));
       
       socket.on("receive_request", (data) => setRequests(prev => {
@@ -125,15 +130,18 @@ export default function Messages() {
       socket.on("request_accepted", (data) => updateContactToConnected(data));
       
       socket.on("chat_history", (history) => {
-         if (currentChat) {
-             const roomId = generateRoomId(email, currentChat.email);
+         const activeChat = activeChatRef.current;
+         if (activeChat) {
+             const roomId = generateRoomId(email, activeChat.email);
              setMessages(history.map(msg => ({ ...msg, message: SimpleCrypto.decrypt(msg.message, roomId) })));
          }
       });
 
       socket.on("receive_message", (data) => {
-        if (currentChat) {
-           const roomId = generateRoomId(email, currentChat.email);
+        const activeChat = activeChatRef.current;
+        if (activeChat) {
+           const roomId = generateRoomId(email, activeChat.email);
+           
            if (data.room === roomId) {
               const text = SimpleCrypto.decrypt(data.message, roomId);
               setMessages(prev => {
@@ -146,28 +154,23 @@ export default function Messages() {
            }
         }
       });
+
+      return () => {
+          socket.disconnect();
+      };
     }
-    return () => {
-      socket.off("connect");
-      socket.off("existing_requests");
-      socket.off("existing_conversations");
-      socket.off("receive_request");
-      socket.off("request_accepted");
-      socket.off("chat_history");
-      socket.off("receive_message");
-    };
-  }, [isLoggedIn, email, currentChat, updateContactToConnected]); 
+  }, [isLoggedIn, email, updateContactToConnected]); 
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-const sendInvite = (e) => {
+  const sendInvite = (e) => {
     e.preventDefault();
     if (inviteEmail) {
       const targetEmail = inviteEmail.toLowerCase();
-      if(targetEmail === email.toLowerCase()) return; // Silent
-      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) return; // Silent
+      if(targetEmail === email.toLowerCase()) return;
+      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) return;
       
-      socket.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
+      socketRef.current.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
       const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, image: "", role: "pending", lastMessage: "Invite Sent", time: "Now" };
       setContacts(prev => [pending, ...prev]);
       setCurrentChat(pending);
@@ -177,7 +180,7 @@ const sendInvite = (e) => {
   };
 
   const acceptRequest = (req) => {
-    socket.emit("accept_request", { requestId: req.id, acceptorName: name, acceptorEmail: email });
+    socketRef.current.emit("accept_request", { requestId: req.id, acceptorName: name, acceptorEmail: email });
     const newContact = { 
         id: req.id, name: req.name, email: req.email, image: "", 
         role: "connected", lastMessage: "Conversation Started", time: "Now" 
@@ -191,7 +194,11 @@ const sendInvite = (e) => {
   const joinChat = (contact) => {
     setCurrentChat(contact);
     setMessages([]); 
-    socket.emit("join_room", generateRoomId(email, contact.email));
+    
+    if(socketRef.current) {
+        const roomId = generateRoomId(email, contact.email);
+        socketRef.current.emit("join_room", roomId);
+    }
   };
 
   const sendMessage = async (e) => {
@@ -199,7 +206,16 @@ const sendInvite = (e) => {
     if (newMessage.trim() && currentChat && currentChat.role !== 'pending') {
       const roomId = generateRoomId(email, currentChat.email);
       const encrypted = SimpleCrypto.encrypt(newMessage, roomId);
-      await socket.emit("send_message", { room: roomId, author: name, message: encrypted, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), participants: [email, currentChat.email] });
+      
+      const payload = { 
+          room: roomId, 
+          author: name, 
+          message: encrypted, 
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+          participants: [email, currentChat.email] 
+      };
+
+      await socketRef.current.emit("send_message", payload);
       setNewMessage("");
     }
   };
@@ -214,11 +230,9 @@ const sendInvite = (e) => {
     <div className="messaging-page">
       <div className="messaging-container">
         
-        {/* --- SIDEBAR --- */}
         <div className="msg-sidebar">
           <div className="msg-header">
             <div className="user-profile">
-               {/* My Profile Pic */}
                <img 
                     src={getImgUrl(myImage)} 
                     alt="Me" 
@@ -240,9 +254,8 @@ const sendInvite = (e) => {
                 <img src={getImgUrl(c.image)} alt={c.name} className="avatar-img" onError={handleImgError} />
                 <div className="contact-details">
                   <div className="contact-top">
-                      {/* FIX: NAME FALLBACK */}
                       <span className="contact-name">{c.name || c.email}</span>
-                      <span className="contact-time">{c.time}</span>
+                      {/* REMOVED TIME SPAN HERE */}
                   </div>
                   <p className="last-message">{c.role === 'pending' ? 'Pending Acceptance...' : c.lastMessage}</p>
                 </div>
@@ -261,19 +274,19 @@ const sendInvite = (e) => {
           </div>
           
           <div className="invite-section">
-            {!showInviteForm ? <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
+            {!showInviteForm ?
+              <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
               <form onSubmit={sendInvite} className="invite-form">
                 <input type="email" placeholder="Email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} autoFocus />
                 <div className="invite-actions">
-                  <button type="submit" className="btn-accept">Send</button>
-                  <button type="button" className="btn-reject" onClick={() => setShowInviteForm(false)}>Cancel</button>
+                  <button type="submit" className="btn-accept">SEND</button>
+                  <button type="button" className="btn-reject" onClick={() => setShowInviteForm(false)}>CANCEL</button>
                 </div>
               </form>
             }
           </div>
         </div>
 
-        {/* --- CHAT AREA --- */}
         <div className="chat-area">
           {currentChat ? (
             <>
@@ -282,7 +295,6 @@ const sendInvite = (e) => {
                   <img src={getImgUrl(currentChat.image)} alt={currentChat.name} className="avatar-img" onError={handleImgError} />
                   <div>
                       <span className="contact-name">{currentChat.name || currentChat.email}</span> 
-                      {/* FIXED: CONNECTED BADGE */}
                       <span className="chat-role-badge">
                           {currentChat.role === 'pending' ? 'PENDING' : 'CONNECTED'}
                       </span>
@@ -297,7 +309,7 @@ const sendInvite = (e) => {
                 ))}
                 <div ref={messagesEndRef} />
               </div>
-              {currentChat.role === 'pending' ? 
+              {currentChat.role === 'pending' ?
                 <div className="pending-notice">Waiting for acceptance...</div> :
                 <form className="chat-input-area" onSubmit={sendMessage}>
                   <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." />

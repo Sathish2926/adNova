@@ -1,3 +1,6 @@
+// ==============================
+// FILE: server/routes/auth.js
+// ==============================
 import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
@@ -6,57 +9,59 @@ import { scrapeSocials } from "../utils/socialScraper.js";
 
 const router = express.Router();
 
-// --- UPLOAD IMAGE (DEBUGGING ADDED) ---
-router.post("/upload-image", upload.single('image'), async (req, res) => {
-    try {
-        if (!req.file) {
-            console.error("Upload Error: No file received from Multer.");
-            return res.status(400).json({ success: false, message: "No file uploaded." });
-        }
-        
-        const { userId, fieldName, role } = req.body; 
-        
-        // This MUST be a Cloudinary URL (starts with https://res.cloudinary...)
-        const fileUrl = req.file.path; 
-        console.log("Cloudinary Upload Success:", fileUrl);
-        
-        let updatePath = role === 'business' ? `businessProfile.${fieldName}` : `influencerProfile.${fieldName}`; 
-        
-        await User.findByIdAndUpdate(userId, { $set: { [updatePath]: fileUrl } }, { new: true });
-
-        res.json({ success: true, fileUrl });
-    } catch (err) {
-        console.error("Cloudinary/Multer Error:", err);
-        res.status(500).json({ success: false, message: "Upload failed: " + err.message });
-    }
-});
-
-// --- SIGNUP ---
+// --- SIGNUP ROUTE ---
 router.post("/signup", async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        // Destructure all fields
+        let { name, email, password, role, phone, ownerName, businessName } = req.body;
+        
+        // --- FIX: If Business User, map 'businessName' to required 'name' field ---
+        if (role === 'business' && !name && businessName) {
+            name = businessName;
+        }
+
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ success: false, message: "Email already registered." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        let profileData = {};
-        if (role === "business") profileData.businessProfile = {};
-        else if (role === "influencer") profileData.influencerProfile = {};
         
-        const user = new User({ name, email, password: hashedPassword, role, ...profileData });
+        let profileData = {};
+        
+        // --- SAVE SIGNUP DATA TO PROFILE IMMEDIATELY ---
+        if (role === "business") {
+            profileData.businessProfile = {
+                brandName: businessName || name, 
+                ownerName: ownerName,
+                phoneNumber: phone
+            };
+        } else if (role === "influencer") {
+            profileData.influencerProfile = {
+                displayName: name,
+                phoneNumber: phone 
+            };
+        }
+        
+        const user = new User({ 
+            name, email, password: hashedPassword, role, ...profileData 
+        });
         await user.save();
 
         res.json({ 
-            success: true, message: "User registered!", 
-            role: user.role, isProfileComplete: user.isProfileComplete, 
-            userId: user._id, name: user.name, email: user.email 
+            success: true, 
+            message: "User registered!", 
+            role: user.role, 
+            isProfileComplete: user.isProfileComplete, 
+            userId: user._id, 
+            name: user.name, 
+            email: user.email 
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Signup failed." });
+        console.error("Signup Error:", err);
+        res.status(500).json({ success: false, message: err.message || "Signup failed." });
     }
 });
 
-// --- LOGIN ---
+// --- LOGIN ROUTE ---
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -66,6 +71,7 @@ router.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
+        // Update Social Stats on Login (Background Task)
         if (user.role === 'influencer') {
             const ig = user.influencerProfile?.instagramHandle;
             const yt = user.influencerProfile?.youtubeHandle;
@@ -101,7 +107,7 @@ router.post("/update-profile", async (req, res) => {
 
         const user = await User.findByIdAndUpdate(userId, updateQuery, { new: true });
 
-        // Trigger Scrape
+        // Trigger Scrape on Update if Handles Changed
         if (role === 'influencer') {
             const ig = profileData.instagramHandle;
             const yt = profileData.youtubeHandle;
@@ -121,6 +127,21 @@ router.post("/update-profile", async (req, res) => {
     } catch (err) {
         console.error("Update Error:", err);
         res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// --- UPLOAD IMAGE ---
+router.post("/upload-image", upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded." });
+        const { userId, fieldName, role } = req.body; 
+        const fileUrl = req.file.path; 
+        let updatePath = role === 'business' ? `businessProfile.${fieldName}` : `influencerProfile.${fieldName}`; 
+        await User.findByIdAndUpdate(userId, { $set: { [updatePath]: fileUrl } }, { new: true });
+        res.json({ success: true, fileUrl });
+    } catch (err) {
+        console.error("Upload Error:", err);
+        res.status(500).json({ success: false, message: "Upload failed." });
     }
 });
 

@@ -1,6 +1,11 @@
+// ==============================
+// FILE: client/src/components/signupModal.jsx
+// ==============================
 import React from "react";
-import { useAuth } from "../contexts/AuthContext"; // Import Auth
-import { useNavigate } from "react-router-dom";   // Import Navigation
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom"; 
+// CHANGED: Import API Config
+import API_BASE_URL from "../apiConfig";
 
 // Helper to switch tabs
 const switchTab = (tab) => {
@@ -8,7 +13,6 @@ const switchTab = (tab) => {
   const bizTab = document.getElementById("bizTab");
   const infForm = document.getElementById("influencerForm");
   const bizForm = document.getElementById("businessForm");
-  
   if (tab === "influencer") {
     infTab.classList.add("active");
     bizTab.classList.remove("active");
@@ -23,18 +27,26 @@ const switchTab = (tab) => {
 };
 
 const SignupModal = () => {
-  const { login } = useAuth();      // Get login function
-  const navigate = useNavigate();   // Get navigation
+  const { login } = useAuth();
+  const navigate = useNavigate(); 
 
-  // --- CLOSE MODAL HELPER ---
   const closeBootstrapModal = () => {
     const modalElement = document.getElementById('signupModal');
     if (modalElement) {
-        modalElement.classList.remove('show');
-        modalElement.style.display = 'none';
-        document.body.classList.remove('modal-open');
-        const backdrop = document.querySelector('.modal-backdrop');
-        if(backdrop) backdrop.remove();
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const instance = window.bootstrap.Modal.getInstance(modalElement);
+            if(instance) instance.hide();
+            else new window.bootstrap.Modal(modalElement).hide();
+        } else {
+            // Fallback
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if(backdrop) backdrop.remove();
+        }
     }
   };
 
@@ -47,25 +59,24 @@ const SignupModal = () => {
     }
     const name = document.getElementById("inf_name").value;
     const email = document.getElementById("inf_email").value;
+    const phone = document.getElementById("inf_phone").value; // Capture Phone
     const password = document.getElementById("inf_pass").value;
     const role = "influencer";
-    
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      // CHANGED: Use API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password, role }),
+          body: JSON.stringify({ name, email, password, role, phone }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
-      
-      // AUTO LOGIN & REDIRECT
       login(data);
       closeBootstrapModal();
       navigate('/profile-setup');
-
     } catch (err) {
       console.error("Signup Failed: ", err.message);
+      alert(err.message);
     }
   };
 
@@ -77,26 +88,26 @@ const SignupModal = () => {
       return;
     }
     const businessName = document.getElementById("biz_name").value;
+    const ownerName = document.getElementById("biz_owner").value;
     const email = document.getElementById("biz_email").value;
+    const phone = document.getElementById("biz_phone").value;
     const password = document.getElementById("biz_pass").value;
     const role = "business";
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      // CHANGED: Use API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: businessName, email, password, role }),
+          body: JSON.stringify({ businessName, ownerName, email, password, role, phone }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
-      
-      // AUTO LOGIN & REDIRECT
       login(data);
       closeBootstrapModal();
       navigate('/profile-setup');
-
     } catch (err) {
       console.error("Signup Failed: ", err.message);
+      alert(err.message);
     }
   };
 
@@ -105,7 +116,6 @@ const SignupModal = () => {
     cursor: 'pointer', fontWeight: '600', transition: '0.3s', textAlign: 'center',
     background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8'
   };
-
   const activeTabStyle = {
     ...tabStyle,
     background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', borderColor: 'transparent',
@@ -121,7 +131,7 @@ const SignupModal = () => {
             <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div className="modal-body p-4">
-            
+           
             <div className="d-flex gap-3 mb-4">
               <div id="infTab" className="active"
                 onClick={(e) => {

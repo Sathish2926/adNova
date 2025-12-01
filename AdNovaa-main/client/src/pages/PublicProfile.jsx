@@ -1,15 +1,18 @@
+// ==============================
+// FILE: client/src/pages/PublicProfile.jsx
+// ==============================
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/navbar";
 import "../styles/businessDashboard.css"; 
 import "../styles/InfluencerDashboard.css"; 
+import API_BASE_URL from "../apiConfig";
 
 const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
 
 export default function PublicProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,15 +26,15 @@ export default function PublicProfile() {
   const getImgUrl = (path) => {
     if (!path) return DEFAULT_PFP;
     if (path.startsWith('http')) return path;
-    return `http://localhost:5000${path}`;
+    return `${API_BASE_URL}${path}`;
   };
 
   useEffect(() => {
     const fetchData = async () => {
         try {
-            const userRes = await fetch(`http://localhost:5000/api/auth/profile/${userId}`);
+            const userRes = await fetch(`${API_BASE_URL}/api/auth/profile/${userId}`);
             const userData = await userRes.json();
-            const postsRes = await fetch(`http://localhost:5000/api/posts/user/${userId}`);
+            const postsRes = await fetch(`${API_BASE_URL}/api/posts/user/${userId}`);
             const postsData = await postsRes.json();
 
             if (userData.success) setUser(userData.user);
@@ -60,15 +63,25 @@ export default function PublicProfile() {
             <div className="inf-container">
                <aside className="inf-sidebar">
                   <div className="pfp-container">
-                      <div className="pfp-circle" style={{backgroundImage: `url(${getImgUrl(profile.pfp)})`}}></div>
+                    <div className="pfp-circle" style={{backgroundImage: `url(${getImgUrl(profile.pfp)})`}}></div>
                   </div>
                   <div className="inf-info">
                       <h2 className="inf-name">{profile.displayName || user.name}</h2>
                       <p className="inf-location">📍 {profile.location || "Global"}</p>
-                      <div className="inf-badge">{profile.niche || "Creator"}</div>
+                      
+                      {/* --- UPDATED: DISPLAY ALL NICHES --- */}
+                      <div style={{display:'flex', flexWrap:'wrap', gap:'8px', justifyContent:'center', marginBottom:'20px'}}>
+                          {profile.niches && profile.niches.length > 0 ? (
+                              profile.niches.map((n, i) => (
+                                  <span key={i} className="inf-badge" style={{marginBottom:0}}>{n}</span>
+                              ))
+                          ) : (
+                              <div className="inf-badge">{profile.niche || "Creator"}</div>
+                          )}
+                      </div>
+
                       <p className="inf-bio">{profile.bio || "No bio available."}</p>
                       
-                      {/* --- VERIFIED SOURCES DISPLAY --- */}
                       {(profile.instagramHandle || profile.youtubeHandle) && (
                             <div style={{textAlign:'center', marginTop:'15px'}}>
                                 <span className="social-label">Verified Sources</span>
@@ -82,7 +95,7 @@ export default function PublicProfile() {
                                         <a href={`https://youtube.com/@${profile.youtubeHandle}`} target="_blank" rel="noreferrer" className="social-badge yt">
                                             <i className="fa-brands fa-youtube"></i> @{profile.youtubeHandle}
                                         </a>
-                                    )}
+                                      )}
                                 </div>
                             </div>
                       )}

@@ -1,12 +1,14 @@
+// ==============================
+// FILE: client/src/pages/BusinessDashboard.jsx
+// ==============================
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Navbar from "../components/navbar";
-import "../styles/businessDashboard.css"; 
-import API_BASE_URL from "../apiConfig"; // <--- IMPORT CONFIG
+import "../styles/businessDashboard.css";
+import API_BASE_URL from "../apiConfig";
 
-// Use Dynamic URL
 const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
 const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
 const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
@@ -19,7 +21,6 @@ export default function BusinessDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [showPostForm, setShowPostForm] = useState(false);
-
   const [business, setBusiness] = useState({ name: "", tag: "", description: "", owner: "", email: "", phone: "", website: "", logo: "", cover: "" });
   const [posts, setPosts] = useState([]); 
   const [newPost, setNewPost] = useState({ img: "", header: "", caption: "" });
@@ -27,11 +28,11 @@ export default function BusinessDashboard() {
   const getImgUrl = (path) => {
     if (!path) return DEFAULT_LOGO;
     if (path.startsWith('http')) return path;
-    return `${API_BASE_URL}${path}`; // Use Dynamic URL for local fallbacks
+    return `${API_BASE_URL}${path}`;
   };
 
   useEffect(() => { 
-    AOS.init({ duration: 900 }); 
+    AOS.init({ duration: 900, once: true }); 
     if (userId) {
         fetch(PROFILE_FETCH_URL(userId))
             .then(res => res.json())
@@ -53,7 +54,6 @@ export default function BusinessDashboard() {
                 }
             })
             .catch(err => console.error(err));
-        
         fetch(USER_POSTS_URL(userId))
             .then(res => res.json())
             .then(data => { if(data.success) setPosts(data.posts); })
@@ -62,19 +62,21 @@ export default function BusinessDashboard() {
     }
   }, [userId]);
 
+  // --- FIX: Refresh AOS ---
+  useEffect(() => {
+      setTimeout(() => AOS.refresh(), 500);
+  }, [posts, business, editing]);
+
   const handleImageUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
-    // Local preview is fine immediately
     const objectUrl = URL.createObjectURL(file);
     setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: objectUrl }));
-    
     const formData = new FormData();
     formData.append('image', file);
     formData.append('userId', userId);
     formData.append('role', role);
     formData.append('fieldName', fieldName);
-    
     fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => { if(data.success) setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: data.fileUrl })); });
@@ -138,7 +140,7 @@ export default function BusinessDashboard() {
             {editing && <label className="edit-cover-btn">Change Cover <input type="file" hidden onChange={(e) => handleImageUpload(e, 'coverUrl')} /></label>}
           </div>
           <div className="bizdash-profile-bar">
-            <div className="logo-wrapper">
+             <div className="logo-wrapper">
               <img src={getImgUrl(business.logo)} className="bizdash-logo" alt="logo" />
               {editing && (
                  <div className="logo-edit-actions">
@@ -153,7 +155,7 @@ export default function BusinessDashboard() {
                   <input className="edit-mode-input" style={{fontSize: '1.8rem', fontWeight: 'bold'}} value={business.name} onChange={(e) => setBusiness({ ...business, name: e.target.value })} placeholder="Brand Name" />
                   <input className="edit-mode-input" value={business.tag} onChange={(e) => setBusiness({ ...business, tag: e.target.value })} placeholder="Industry • Location" />
                 </>
-              ) : (
+               ) : (
                 <><h2>{business.name}</h2><p>{business.tag}</p></>
               )}
             </div>
@@ -162,7 +164,7 @@ export default function BusinessDashboard() {
 
         <div className="bizdash-content">
           <aside className="biz-details-card glass-panel" data-aos="fade-right">
-            <h4>About Business</h4>
+             <h4>About Business</h4>
             {editing ? (
               <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                 <input className="edit-mode-input" placeholder="Owner" value={business.owner} onChange={(e) => setBusiness({ ...business, owner: e.target.value })} />
@@ -192,8 +194,8 @@ export default function BusinessDashboard() {
                 <div className="masonry-item post-card glass-card" key={i}>
                   <img src={getImgUrl(p.image)} alt="post" />
                   <div className="post-overlay">
-                    <h5 style={{color:'white', margin:'0 0 5px 0'}}>{p.header}</h5>
-                    <small style={{color:'#e2e8f0'}}>{p.caption}</small>
+                     <h5 style={{color:'white', margin:'0 0 5px 0'}}>{p.header}</h5>
+                     <small style={{color:'#e2e8f0'}}>{p.caption}</small>
                   </div>
                 </div>
               ))}
@@ -206,6 +208,7 @@ export default function BusinessDashboard() {
           <div className="post-form-overlay" onClick={() => setShowPostForm(false)}>
             <div className="post-form-container glass-panel" onClick={e => e.stopPropagation()}>
                <h3 style={{marginBottom:'20px', color:'white'}}>Create New Post</h3>
+               
                <div className="file-upload-wrapper">
                    <input type="file" accept="image/*" id="biz-post-upload" hidden onChange={handleNewPostImage} />
                    <label htmlFor="biz-post-upload" className="file-upload-label">
@@ -219,6 +222,7 @@ export default function BusinessDashboard() {
                        )}
                    </label>
                </div>
+
                <input className="edit-mode-input" placeholder="Header" value={newPost.header} onChange={e => setNewPost({...newPost, header: e.target.value})} />
                <input className="edit-mode-input" placeholder="Caption" value={newPost.caption} onChange={e => setNewPost({...newPost, caption: e.target.value})} />
                <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
