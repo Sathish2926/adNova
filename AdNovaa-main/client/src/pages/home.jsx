@@ -1,17 +1,20 @@
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\home.jsx
+// ==============================
 import React, { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import "./home.css"; 
+import "./home.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Navbar from "../components/navbar";
 import SignupModal from "../components/signupModal";
 import LoginModal from "../components/loginModal";
 import Contact from "../components/contact"; 
+// ADDED IMPORT
+import Services from "../components/services";
 
-// Import your images (Adjust paths if needed based on your folder structure)
-// Assuming images are in public/assets/images or src/assets/images
-// If they are in public, we use direct paths string. 
+// Import your images
 const img1 = "assets/images/undefined (1).jpeg";
 const img2 = "assets/images/undefined (3).jpeg";
 const img3 = "assets/images/Photo colorful assortment of gents tshir….jpeg";
@@ -54,7 +57,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* --- VISUAL SHOWCASE (BENTO GRID WITH REAL IMAGES) --- */}
+        {/* --- VISUAL SHOWCASE --- */}
         <section className="section-wrapper" id="showcase">
           <div className="section-header" data-aos="fade-up">
             <h2>Real Results, Real People</h2>
@@ -62,7 +65,6 @@ const Home = () => {
           </div>
 
           <div className="bento-grid">
-            
             {/* Text Tile */}
             <div className="bento-card text-card" data-aos="fade-right">
               <div className="bento-icon">🚀</div>
@@ -104,6 +106,9 @@ const Home = () => {
 
           </div>
         </section>
+        
+        {/* --- ADDED SERVICES COMPONENT --- */}
+        <Services />
 
         {/* --- SPLIT SECTION (Biz vs Inf) --- */}
         <section className="dual-section" id="about">

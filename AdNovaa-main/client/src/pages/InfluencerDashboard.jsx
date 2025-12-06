@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Navbar from '../components/navbar';
-import "../styles/InfluencerDashboard.css"; 
+import "../styles/InfluencerDashboard.css";
 import API_BASE_URL from "../apiConfig";
 
 const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
@@ -17,24 +17,20 @@ const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`;
 const REFRESH_STATS_URL = `${API_BASE_URL}/api/auth/refresh-socials`;
 
 const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
-
 const COMMON_NICHES = [
     "Fashion", "Beauty", "Tech", "Gaming", "Travel", "Food", 
     "Fitness", "Health", "Lifestyle", "Parenting", "Business", 
     "Finance", "Education", "Entertainment", "Music", "Art"
 ];
-
 export default function InfluencerDashboard() {
     const { userId, role } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [showPostForm, setShowPostForm] = useState(false);
-    
     const [profile, setProfile] = useState({
         name: '', niche: '', niches: [], location: '', bio: '', followers: 0, pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
     });
-    
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
     const [customNiche, setCustomNiche] = useState(""); 
@@ -44,7 +40,6 @@ export default function InfluencerDashboard() {
         if (isNaN(num)) return "0";
         return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
     };
-
     const getImgUrl = (path) => {
         if (!path) return DEFAULT_PFP;
         if (path.startsWith('http')) return path;
@@ -78,7 +73,6 @@ export default function InfluencerDashboard() {
                     }
                 })
                 .catch(err => console.error(err));
-
             fetch(USER_POSTS_URL(userId))
                 .then(res => res.json())
                 .then(data => { if(data.success) setPosts(data.posts); })
@@ -133,7 +127,8 @@ export default function InfluencerDashboard() {
                 alert(data.message);
             }
         } catch (err) { console.error(err);
-        } finally { setIsRefreshing(false); }
+        } finally { setIsRefreshing(false);
+        }
     };
 
     const handleImageUpload = (e) => {
@@ -177,7 +172,8 @@ export default function InfluencerDashboard() {
                 setNewPost({ img:'', header:'', caption:''});
                 setShowPostForm(false);
             }
-        } catch(err) { console.error(err); }
+        } catch(err) { console.error(err);
+        }
     };
 
     const handleSaveProfile = async () => {
@@ -201,7 +197,6 @@ export default function InfluencerDashboard() {
             if(profile.instagramHandle || profile.youtubeHandle) handleRefreshStats();
         } catch (error) { console.error(error); }
     };
-
     if (isLoading) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>Loading...</div>;
 
     return (
@@ -238,9 +233,9 @@ export default function InfluencerDashboard() {
                                                         padding:'4px 8px', 
                                                         borderRadius:'12px', 
                                                         cursor:'pointer',
-                                                        // FIX: Background White, Text Black when unselected
-                                                        background: profile.niches.includes(n) ? '#6366F1' : 'white',
-                                                        color: profile.niches.includes(n) ? 'white' : 'black',
+                                                        // FIX: Use Dark BG for unselected to support White text
+                                                        background: profile.niches.includes(n) ? '#6366F1' : 'rgba(255,255,255,0.05)',
+                                                        color: 'white', // Always white
                                                         border: '1px solid rgba(255,255,255,0.1)',
                                                         fontWeight: '600'
                                                     }}
@@ -290,7 +285,7 @@ export default function InfluencerDashboard() {
                                 <>
                                     <h2 className='inf-name'>{profile.name}</h2>
                                     <p className='inf-location'>📍 {profile.location}</p>
-                                    
+                                   
                                     <div style={{display:'flex', flexWrap:'wrap', gap:'8px', justifyContent:'center', marginBottom:'20px'}}>
                                         {profile.niches && profile.niches.length > 0 ? (
                                             profile.niches.map((n, i) => (
@@ -381,7 +376,8 @@ export default function InfluencerDashboard() {
                         </div>
                     </div>
                 )}
-                <button className='fab-edit' onClick={() => { if(editMode) handleSaveProfile(); else setEditMode(true); }}>{editMode ? "✓" : "✎"}</button>
+                <button className='fab-edit' onClick={() => { if(editMode) handleSaveProfile();
+                else setEditMode(true); }}>{editMode ? "✓" : "✎"}</button>
             </div>
         </>
     );

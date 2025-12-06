@@ -3,7 +3,7 @@
 // ==============================
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; 
+import { useAuth } from "../contexts/AuthContext";
 // CHANGED: Import Global API Config
 import API_BASE_URL from "../apiConfig";
 
@@ -16,7 +16,8 @@ const LoginModal = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
-  const [resetMessageType, setResetMessageType] = useState(""); // 'success' or 'error'
+  const [resetMessageType, setResetMessageType] = useState("");
+  // 'success' or 'error'
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const navigate = useNavigate(); 
   const { login } = useAuth();
@@ -31,7 +32,8 @@ const LoginModal = () => {
       const data = await response.json(); 
 
       if (!response.ok) {
-        const errorMessage = data.message || `Login failed. Status: ${response.status}.`;
+        const errorMessage = data.message ||
+        `Login failed. Status: ${response.status}.`;
         throw new Error(errorMessage);
       }
       return { success: true, ...data };
@@ -69,8 +71,7 @@ const LoginModal = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) return; 
-
+    if (!email || !password) return;
     const response = await loginUser({ email, password });
     if (response.success) {
       login(response);
@@ -80,7 +81,8 @@ const LoginModal = () => {
       navigate(dashboardPath, { replace: true });
     } else {
       console.error("Login failed: " + response.message);
-      alert(response.message); // Added user feedback
+      alert(response.message);
+      // Added user feedback
     }
   };
 
@@ -148,7 +150,8 @@ const LoginModal = () => {
                   <input type="password" className="form-control p-3" placeholder="Enter your password" required style={{ background: "#1b072aff", border: "1px solid #ffffff20", borderRadius: "12px", color: "white" }} value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
 
-                <button className="btn w-100 py-3 mt-3" style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", borderRadius: "12px", border: "none", fontWeight: "600", fontSize: "1rem", color: "white" }} type="submit">Login</button>
+                <button className="btn w-100 py-3 mt-3" style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", borderRadius: "12px", border: "none", 
+                fontWeight: "600", fontSize: "1rem", color: "white" }} type="submit">Login</button>
                 
                 <div className="text-center mt-3">
                   <button type="button" className="btn btn-link text-decoration-none" style={{ color: "#6366F1", fontSize: "0.9rem" }} onClick={() => setShowForgotPassword(true)}>
@@ -156,8 +159,7 @@ const LoginModal = () => {
                   </button>
                 </div>
                 
-                <div className="text-center mt-4 mb-2"><small className="text-light">Or login using</small></div>
-                <button className="btn w-100 py-3" style={{ background: "linear-gradient(45deg, #F58529, #DD2A7B, #8134AF, #515BD4)", border: "none", color: "white", fontWeight: "600", borderRadius: "10px" }} type="button">Login with Instagram</button>
+                {/* REMOVED INSTAGRAM LOGIN BUTTON */}
               </>
             ) : (
               <>
@@ -177,7 +179,8 @@ const LoginModal = () => {
                 </div>
 
                 {resetMessage && (
-                  <div className={`alert ${resetMessageType === 'success' ? 'alert-success' : 'alert-danger'} py-2 px-3 mb-3`} role="alert">
+                  <div className={`alert ${resetMessageType === 'success' ?
+                  'alert-success' : 'alert-danger'} py-2 px-3 mb-3`} role="alert">
                     <small>{resetMessage}</small>
                   </div>
                 )}
