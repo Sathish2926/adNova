@@ -1,7 +1,8 @@
 // ==============================
 // FILE: server/utils/socialScraper.js
 // ==============================
-import puppeteer from 'puppeteer';
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
 
 const parseCount = (str) => {
     if (!str) return 0;
@@ -22,18 +23,13 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
         console.log(`[Scraper] Starting for IG: ${instaHandle}, YT: ${ytHandle}`);
         
         // DEPLOYMENT CONFIGURATION
-        browser = await puppeteer.launch({ 
-            headless: "new", 
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--single-process', // Required for Render
-                '--no-zygote'       // Required for Render
-            ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
-        });
+        const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+    ignoreHTTPSErrors: true,
+});
 
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
