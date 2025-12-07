@@ -14,7 +14,7 @@
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6",
+    "react-router-dom": "^6.30.2",
     "react-scripts": "^5.0.1",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"
@@ -23,7 +23,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "mocha": "mocha --require chai/register --recursive src/**/*.test.js"
   },
   "eslintConfig": {
     "extends": [
@@ -42,5 +43,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "chai": "^6.2.1",
+    "mocha": "^11.7.5"
   }
 }
