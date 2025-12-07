@@ -1,102 +1,76 @@
-// ==============================
-// FILE: server/utils/socialScraper.js
-// ==============================
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
-const parseCount = (str) => {
-    if (!str) return 0;
-    const cleanStr = str.replace(/[^0-9.kKmM]/g, '').toLowerCase();
-    let multiplier = 1;
-    if (cleanStr.includes('k')) multiplier = 1000;
-    if (cleanStr.includes('m')) multiplier = 1000000;
-    
-    const num = parseFloat(cleanStr.replace(/[km]/g, ''));
-    return Math.floor(num * multiplier);
-};
-
-export const scrapeSocials = async (instaHandle, ytHandle) => {
-    let totalFollowers = 0;
+export const scrapeSocials = async (url) => {
     let browser = null;
-
     try {
-        console.log(`[Scraper] Starting for IG: ${instaHandle}, YT: ${ytHandle}`);
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 5000));
         
-        // DEPLOYMENT CONFIGURATION
-        const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-    ignoreHTTPSErrors: true,
-});
+        console.log(`[Scraper] Starting for: ${url}`);
+        
+        chromium.setGraphicsMode = false;
+        
+        browser = await puppeteer.launch({
+            args: [
+                ...chromium.args,
+                '--hide-scrollbars',
+                '--disable-web-security',
+                '--no-sandbox',
+                '--disable-setuid-sandbox'
+            ],
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(),
+            headless: chromium.headless,
+            ignoreHTTPSErrors: true,
+        });
 
         const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
+        
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-        // --- 1. INSTAGRAM ---
-        if (instaHandle) {
-            const cleanHandle = instaHandle.replace('@', '').trim();
-            const url = `https://www.instagram.com/${cleanHandle}/`;
-            
+        let result = '0';
+
+        if (url.includes('instagram.com')) {
             try {
-                await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 });
-                const description = await page.evaluate(() => {
-                    const meta = document.querySelector("meta[name='description']");
-                    return meta ? meta.getAttribute("content") : null;
-                });
-                if (description) {
-                    const match = description.match(/([\d,.]+)([MK]?) Followers/i);
-                    if (match) {
-                        let followers = parseFloat(match[1].replace(/,/g, ""));
-                        if (match[2] === "K") followers *= 1000;
-                        if (match[2] === "M") followers *= 1000000;
-                        
-                        console.log(`[Scraper] IG Found: ${followers}`);
-                        totalFollowers += Math.round(followers);
-                    }
+                const content = await page.content();
+                const match = content.match(/"edge_followed_by":\{"count":(\d+)\}/);
+                if (match && match[1]) {
+                    result = match[1];
+                } else {
+                    const metaContent = await page.$eval('meta[property="og:description"]', el => el.content).catch(() => '');
+                    const metaMatch = metaContent.match(/([0-9.,KMB]+)\s+Followers/i);
+                    if (metaMatch) result = metaMatch[1];
                 }
             } catch (e) {
-                console.error(`[Scraper] IG Error: ${e.message}`);
+                console.log(`[Scraper] IG Error: ${e.message}`);
+            }
+        } else if (url.includes('youtube.com')) {
+            try {
+                const content = await page.content();
+                const match = content.match(/"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([\d.,KMB]+)\s+subscribers"/);
+                if (match && match[1]) {
+                    result = match[1];
+                } else {
+                    const text = await page.evaluate(() => document.body.innerText);
+                    const textMatch = text.match(/([0-9.,KMB]+)\s+subscribers/i);
+                    if (textMatch) result = textMatch[1];
+                }
+            } catch (e) {
+                console.log(`[Scraper] YT Error: ${e.message}`);
             }
         }
 
-        // --- 2. YOUTUBE ---
-        if (ytHandle) {
-            const cleanHandle = ytHandle.replace('@', '').trim();
-            const url = cleanHandle.startsWith('channel/') 
-                ? `https://www.youtube.com/${cleanHandle}`
-                : `https://www.youtube.com/@${cleanHandle}`;
+        console.log(`[Scraper] Found ${result} for ${url}`);
+        return result;
 
-            try {
-                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-                const subText = await page.evaluate(() => {
-                    const metas = Array.from(document.querySelectorAll('meta'));
-                    const desc = metas.find(m => m.name === 'description')?.content;
-                    if(desc && desc.includes('subscribers')) return desc;
-                    const els = Array.from(document.querySelectorAll('yt-formatted-string, span'));
-                    const target = els.find(e => e.innerText && e.innerText.includes('subscribers'));
-                    return target ? target.innerText : null;
-                });
-
-                if (subText) {
-                    const match = subText.match(/([\d\.KM]+)\s*subscribers/i);
-                    if (match && match[1]) {
-                        totalFollowers += parseCount(match[1]);
-                        console.log(`[Scraper] YT Found: ${match[1]}`);
-                    }
-                }
-            } catch (e) {
-                console.error(`[Scraper] YT Error: ${e.message}`);
-            }
-        }
-
-    } catch (err) {
-        console.error("[Scraper] Browser Crash:", err.message);
+    } catch (error) {
+        console.error(`[Scraper] Fatal Error for ${url}:`, error);
+        return '0';
     } finally {
-        if (browser) await browser.close();
+        if (browser) {
+            await browser.close();
+        }
     }
-
-    return totalFollowers;
-    
 };
