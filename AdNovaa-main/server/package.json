@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sparticuz/chromium": "^143.0.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
     "cloudinary": "^1.41.3",
@@ -27,7 +28,7 @@
     "nodemailer": "^7.0.11",
     "nodemo": "^1.0.0",
     "nodemon": "^3.1.11",
-    "puppeteer": "^24.31.0",
+    "puppeteer-core": "^24.32.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socket.io": "^4.8.1"

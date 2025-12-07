@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import upload from "../config/multerConfig.js"; 
 import { scrapeSocials } from "../utils/socialScraper.js"; 
+import sendEmail from '../utils/sendEmail.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -130,6 +132,43 @@ router.post("/update-profile", async (req, res) => {
     }
 });
 
+router.post("/forgot-password", async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        
+        // FIX 1: Check if user exists before accessing properties
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Generate a reset token (Valid for 10 minutes)
+        // Note: Ensure you have JWT_SECRET in your .env file, or it defaults to 'secret'
+        const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '10m' });
+
+        // Create the reset URL (Point to your Frontend)
+        // Ensure CLIENT_URL is set in .env (e.g., https://your-app.onrender.com)
+        const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+        const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+
+        // FIX 2: Define the message variable
+        const message = `You have requested a password reset. Please go to this link to reset your password:\n\n${resetUrl}\n\nThis link expires in 10 minutes.`;
+
+        await sendEmail({
+            email: user.email,
+            subject: 'Password Reset Request',
+            message: message
+        });
+
+        res.status(200).json({ success: true, data: 'Email sent' });
+
+    } catch (err) {
+        console.error("Forgot Password Error:", err);
+        // FIX 3: Use res.status instead of next(error)
+        res.status(500).json({ success: false, message: "Email could not be sent" });
+    }
+});
 // --- UPLOAD IMAGE ---
 router.post("/upload-image", upload.single('image'), async (req, res) => {
     try {
