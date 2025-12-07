@@ -1,3 +1,6 @@
+// ==============================
+// FILE: server/index.js
+// ==============================
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -8,13 +11,13 @@ import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
 import cron from "node-cron"; 
-import { scrapeSocials } from "./utils/socialScraper.js"; 
+import { scrapeSocials } from "./utils/socialScraper.js";
 
 // Route Imports
 import authRoutes from "./routes/auth.js";
 import postRoutes from "./routes/posts.js"; 
 import Request from "./models/Request.js"; 
-import Message from "./models/Message.js"; 
+import Message from "./models/Message.js";
 import Conversation from "./models/Conversation.js";
 import User from "./models/User.js"; 
 
@@ -25,34 +28,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const httpServer = createServer(app); 
+const httpServer = createServer(app);
 
 // --- DYNAMIC CORS CONFIG ---
-// Allow both Localhost (for dev) and your Render Frontend (for prod)
+// We allow Localhost (dev) and the Production URL (from .env)
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://adnova-frontend.onrender.com" // REPLACE THIS with your actual Render Frontend URL later
+  "http://localhost:5173",
+  process.env.CLIENT_URL // You will set this in Render Dashboard later (e.g., https://adnova.vercel.app)
 ];
 
 const io = new Server(httpServer, {
   cors: { 
     origin: allowedOrigins,
-    methods: ["GET", "POST"] 
+    methods: ["GET", "POST"],
+    credentials: true
   },
 });
 
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
 }));
 
 app.use(bodyParser.json());
 
 // Serve Static Images (Fallback for old local images)
+// Note: In production, these might break if you don't use Cloudinary exclusively, 
+// but we keep it for backward compatibility.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB Atlas (Production DB)
-mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/adnovaDB")
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
@@ -163,7 +171,7 @@ io.on("connection", (socket) => {
     const acceptorUser = await User.findOne({ email: myEmail });
     let acceptorImage = "";
     if(acceptorUser) {
-        acceptorImage = acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp;
+      acceptorImage = acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp;
     }
 
     socket.to(senderEmail).emit("request_accepted", { email: myEmail, name: acceptorName, image: acceptorImage, conversationId: newConv._id });

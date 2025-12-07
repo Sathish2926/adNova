@@ -1,3 +1,6 @@
+// ==============================
+// FILE: server/utils/socialScraper.js
+// ==============================
 import puppeteer from 'puppeteer';
 
 const parseCount = (str) => {
@@ -18,14 +21,19 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
     try {
         console.log(`[Scraper] Starting for IG: ${instaHandle}, YT: ${ytHandle}`);
         
+        // DEPLOYMENT CONFIGURATION
         browser = await puppeteer.launch({ 
-            headless: "new", // Use 'new' for better performance
+            headless: "new", 
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
-            ] 
+                '--disable-gpu',
+                '--single-process', // Required for Render
+                '--no-zygote'       // Required for Render
+            ],
+            // This line uses the internal Chrome path on Render if available
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
         });
 
         const page = await browser.newPage();
@@ -38,12 +46,10 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
             
             try {
                 await page.goto(url, { waitUntil: "networkidle2", timeout: 45000 });
-
                 const description = await page.evaluate(() => {
                     const meta = document.querySelector("meta[name='description']");
                     return meta ? meta.getAttribute("content") : null;
                 });
-
                 if (description) {
                     const match = description.match(/([\d,.]+)([MK]?) Followers/i);
                     if (match) {
@@ -69,14 +75,10 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
 
             try {
                 await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-                
                 const subText = await page.evaluate(() => {
-                    // Specific YouTube selector strategy
                     const metas = Array.from(document.querySelectorAll('meta'));
                     const desc = metas.find(m => m.name === 'description')?.content;
                     if(desc && desc.includes('subscribers')) return desc;
-                    
-                    // Fallback to searching text
                     const els = Array.from(document.querySelectorAll('yt-formatted-string, span'));
                     const target = els.find(e => e.innerText && e.innerText.includes('subscribers'));
                     return target ? target.innerText : null;
