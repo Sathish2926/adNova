@@ -100,4 +100,3 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
     return totalFollowers;
     
 };
-export { scrapeSocials };
