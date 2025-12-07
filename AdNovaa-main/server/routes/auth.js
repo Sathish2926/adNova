@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import upload from "../config/multerConfig.js"; 
 import { scrapeSocials } from "../utils/socialScraper.js"; 
+import sendEmail from '../utils/sendEmail.js';
 
 const router = express.Router();
 
@@ -132,13 +133,17 @@ router.post("/update-profile", async (req, res) => {
 
 //forgot password route 
 router.post("/forgot-password", async (req, res) => {
-    try {
-        const user = await User.findOne({ email: req.body.email })
-        if (!user) return res.status(404).json("User not found")
-        res.status(200).json("Password reset link sent")
-    } catch (err) {
-        res.status(500).json(err)
-    }
+try {
+    await sendEmail({
+        email: user.email,
+        subject: 'Password Reset Token',
+        message: message
+    });
+    res.status(200).json({success:true,data:'Email sent'});
+} catch (err) {
+    console.log(err); // This will now print the actual error
+    return next(new ErrorResponse('Email could not be sent', 500));
+}
 })
 // --- UPLOAD IMAGE ---
 router.post("/upload-image", upload.single('image'), async (req, res) => {
