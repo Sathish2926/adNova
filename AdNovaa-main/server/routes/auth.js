@@ -130,6 +130,16 @@ router.post("/update-profile", async (req, res) => {
     }
 });
 
+//forgot password route 
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email })
+        if (!user) return res.status(404).json("User not found")
+        res.status(200).json("Password reset link sent")
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
 // --- UPLOAD IMAGE ---
 router.post("/upload-image", upload.single('image'), async (req, res) => {
     try {
