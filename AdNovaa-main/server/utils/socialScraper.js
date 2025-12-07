@@ -32,8 +32,6 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
                 '--single-process', // Required for Render
                 '--no-zygote'       // Required for Render
             ],
-            // This line uses the internal Chrome path on Render if available
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
         });
 
         const page = await browser.newPage();

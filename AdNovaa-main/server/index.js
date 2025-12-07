@@ -54,9 +54,6 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Serve Static Images (Fallback for old local images)
-// Note: In production, these might break if you don't use Cloudinary exclusively, 
-// but we keep it for backward compatibility.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB Atlas (Production DB)
