@@ -1,0 +1,293 @@
+/* ==============================
+   FILE: client/src/styles/businessDashboard.css
+   ============================== */
+
+/* --- LAYOUT WRAPPER --- */
+.bizdash-wrapper {
+  padding-top: 90px;
+  min-height: 100vh;
+  padding-bottom: 50px;
+  width: 100%;
+  background: #030b25;
+  overflow-y: visible !important;
+}
+
+/* --- HEADER --- */
+.bizdash-header-container { position: relative;
+  max-width: 1200px; margin: 0 auto 40px; width: 95%; display: flex; flex-direction: column; }
+
+.bizdash-cover {
+  width: 100%; height: 300px;
+  border-radius: 16px;
+  background-size: cover; background-position: center; position: relative;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 1;
+}
+.bizdash-cover::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: 16px;
+  background: linear-gradient(to top, #030b25 0%, transparent 60%);
+}
+
+.edit-cover-btn {
+  position: absolute; top: 20px;
+  right: 20px; z-index: 20;
+  background: #0f172a; padding: 8px 15px; border-radius: 8px; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* --- PROFILE BAR --- */
+.bizdash-profile-bar {
+  display: flex; align-items: flex-end; padding: 0 40px; margin-top: -80px; position: relative;
+  z-index: 10; gap: 30px;
+}
+
+.logo-wrapper { width: 160px; height: 160px; flex-shrink: 0; position: relative; }
+.bizdash-logo {
+  width: 100%;
+  height: 100%; border-radius: 50%; object-fit: cover;
+  border: 5px solid #030b25; background: #1e293b;
+}
+
+.logo-edit-actions {
+  position: absolute; bottom: 0;
+  left: 50%; transform: translate(-50%, 20%); display: flex; gap: 8px; z-index: 20;
+}
+.logo-action-btn { width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #030b25; color: white; }
+.logo-action-btn.edit { background: #6366F1;
+}
+.logo-action-btn.remove { background: #ef4444; }
+
+.profile-text { flex: 1; padding-bottom: 10px; color: white; }
+.profile-text h2 { font-size: 2.2rem; margin: 0;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+.profile-text p { color: #0dcaf0; font-weight: 600; text-transform: uppercase; margin-top: 5px;
+}
+
+/* --- CONTENT --- */
+.bizdash-content {
+  max-width: 1200px; margin: 40px auto 0; width: 95%;
+  display: grid; grid-template-columns: 350px 1fr;
+  gap: 30px; align-items: start;
+}
+@media (max-width: 900px) { .bizdash-content { grid-template-columns: 1fr; } }
+
+/* SIDEBAR */
+.biz-details-card {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 30px; position: sticky; top: 100px;
+}
+.biz-details-card h4 { border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 15px; margin-bottom: 20px; }
+.detail-row { margin-bottom: 15px; color: #94a3b8; }
+.detail-row strong { color: white; display: block;
+}
+.detail-bio { margin-top: 20px; background: #1e293b; padding: 15px; border-radius: 8px; line-height: 1.6;
+}
+
+/* POSTS */
+.biz-posts-area h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px; }
+
+.new-post-btn {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px; color: #94a3b8; cursor: pointer; transition: 0.3s; width: 100%;
+  min-height: 250px; background: #0f172a;
+}
+.new-post-btn:hover { border-color: #6366F1; color: #6366F1; background: #1e293b; }
+
+.post-card { position: relative; overflow: hidden; border-radius: 12px;
+  background: #1e293b; }
+.post-card img { width: 100%; display: block; transition: 0.5s; }
+.post-overlay {
+  position: absolute; bottom: 0; left: 0;
+  right: 0; padding: 20px;
+  background: linear-gradient(to top, rgba(3, 11, 37, 0.95) 0%, rgba(3, 11, 37, 0.6) 70%, transparent 100%);
+  opacity: 0; transition: 0.3s;
+  max-height: 100%; overflow-y: auto;
+}
+.post-card:hover .post-overlay { opacity: 1; }
+.post-card:hover img { transform: scale(1.05);
+}
+
+/* --- MODAL (Fixed Scroll & Size) --- */
+.post-form-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+
+.post-form-container {
+  width: 100%; max-width: 500px; padding: 30px; background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; 
+  display: flex; flex-direction: column;
+  max-height: 85vh; overflow-y: auto;
+  /* Enable Scroll */
+}
+.post-form-container::-webkit-scrollbar { width: 6px; }
+.post-form-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px;
+}
+
+/* --- FIXED IMAGE PREVIEW --- */
+.preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 200px !important;
+  /* STRICT LIMIT */
+  object-fit: contain;
+  margin: 15px 0; border-radius: 8px;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* --- ROUNDED BUTTONS --- */
+.post-form-container button {
+  border-radius: 50px !important; /* Pill Shape */
+  padding: 12px;
+  font-weight: 600; transition: 0.2s;
+}
+
+/* --- FILE UPLOAD UI --- */
+.file-upload-wrapper { width: 100%; margin-bottom: 15px; flex-shrink: 0;
+}
+.file-upload-label {
+    display: flex; justify-content: center; align-items: center;
+    width: 100%; height: 150px;
+    /* Compact Box */
+    background: rgba(255, 255, 255, 0.05); border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px; cursor: pointer; transition: 0.3s;
+    overflow: hidden; position: relative;
+}
+.file-upload-label:hover { background: rgba(255, 255, 255, 0.1); border-color: #6366F1;
+}
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; color: #94a3b8; gap: 10px; }
+
+.edit-mode-input { margin-bottom: 12px; background: #020617 !important;
+  border-radius: 8px !important; }
+
+/* FAB */
+.fab-edit {
+  position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; border-radius: 50%;
+  background: #6366F1; color: white; border: none; font-size: 1.5rem; cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+}
+
+/* ==============================
+   NEW AESTHETIC SEARCH BAR
+   ============================== */
+
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.6); /* Semi-transparent dark blue */
+    backdrop-filter: blur(12px);
+    /* Glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    /* Pill Shape */
+    padding: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 950px;
+    margin: 0 auto 50px;
+    transition: 0.3s;
+}
+
+.search-bar-container:hover {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(99, 102, 241, 0.3); /* Slight glow on hover */
+}
+
+.search-group {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding: 0 15px;
+    position: relative;
+}
+
+.search-icon {
+    color: #6366F1;
+    /* Primary Color */
+    font-size: 1rem;
+    margin-right: 12px;
+    opacity: 0.8;
+}
+
+/* Override Global Input Styles for this component */
+.search-input-clean, 
+.search-select-clean {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 0 !important;
+    border-radius: 0 !important;
+    color: white !important;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.search-input-clean:focus, 
+.search-select-clean:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* --- FIX: NORMAL DROPDOWN LOOK --- */
+/* We force the options to have a white background and black text.
+   This ensures that when hovered, the text remains visible against the
+   system default highlight color (usually blue). */
+.search-select-clean option {
+    background-color: white !important;
+    color: black !important;
+}
+
+.search-input-clean::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.7;
+}
+
+/* Vertical Divider */
+.search-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Round Search Button */
+.search-btn-round {
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    margin-left: 10px;
+}
+
+.search-btn-round:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .search-bar-container {
+        flex-direction: column;
+        border-radius: 20px;
+        padding: 20px;
+        gap: 15px;
+    }
+    .search-divider {
+        width: 100%;
+        height: 1px;
+    }
+    .search-btn-round {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+}

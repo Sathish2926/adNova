@@ -1,0 +1,144 @@
+/* ==============================
+   FILE: client/src/styles/InfluencerDashboard.css
+   ============================== */
+
+.inf-wrapper {
+  padding-top: 90px;
+  min-height: 100vh;
+  padding-bottom: 80px; 
+  width: 100%;
+  background: #030b25;
+  overflow-y: visible !important;
+}
+
+.inf-container {
+  max-width: 1200px; margin: 0 auto; width: 95%;
+  display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: start;
+}
+@media (max-width: 900px) { .inf-container { grid-template-columns: 1fr; } }
+
+/* SIDEBAR */
+.inf-sidebar {
+  padding: 30px; text-align: center; position: sticky; top: 100px;
+  background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.pfp-container { display: flex; justify-content: center; margin-bottom: 20px; }
+.pfp-circle {
+  width: 140px; height: 140px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 4px solid #030b25; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  position: relative;
+}
+.pfp-edit-overlay {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+  opacity: 0; cursor: pointer; transition: 0.2s; color: white; font-size: 1.5rem;
+}
+.pfp-circle:hover .pfp-edit-overlay { opacity: 1; }
+
+.inf-name { font-size: 1.8rem; margin-bottom: 5px; color: white; font-weight: 700; }
+.inf-location { color: #94a3b8; font-size: 0.95rem; margin-bottom: 15px; }
+
+.inf-badge {
+  display: inline-block; background: #1e293b; color: #6366F1;
+  padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+  margin-bottom: 20px; text-transform: uppercase; border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.inf-bio {
+  text-align: left; background: #1e293b; padding: 15px;
+  border-radius: 12px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6;
+}
+
+/* STATS */
+.inf-stats { display: flex; justify-content: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+.stat-box { text-align: center; }
+.stat-num-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.stat-num { font-size: 1.8rem; font-weight: 800; color: white; line-height: 1; }
+.stat-label { font-size: 0.8rem; color: #0dcaf0; text-transform: uppercase; margin-top: 5px; font-weight: 600; letter-spacing: 1px; }
+
+/* Sync Button */
+.sync-btn {
+    background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; padding: 0; line-height: 1; transition: 0.3s; display: flex; align-items: center;
+}
+.sync-btn:hover { color: #6366F1; transform: scale(1.1); }
+.sync-btn:disabled { cursor: wait; opacity: 0.7; }
+.spinning { animation: spin 1s linear infinite; color: #6366F1; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Socials */
+.connected-socials { margin-top: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.social-badge {
+    font-size: 0.8rem; padding: 6px 12px; border-radius: 20px; color: white; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.1);
+}
+.social-badge:hover { transform: translateY(-2px); color: white; }
+.social-badge.insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.social-badge.yt { background: #FF0000; }
+.social-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+
+.section-title { font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; color: white; font-weight: 700; }
+
+/* CONTENT TILES */
+.new-post-tile {
+  border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px; color: #94a3b8; cursor: pointer; transition: 0.3s;
+  width: 100%; min-height: 250px; background: #0f172a;
+}
+.new-post-tile:hover { border-color: #6366F1; background: #1e293b; color: #6366F1; }
+.plus-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+/* CARD & OVERLAY */
+.post-card { position: relative !important; overflow: hidden !important; border-radius: 12px; background: #1e293b; }
+.post-card img { width: 100%; display: block; transition: 0.5s; }
+.post-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+  background: linear-gradient(to top, rgba(3, 11, 37, 0.95) 0%, rgba(3, 11, 37, 0.6) 70%, transparent 100%);
+  opacity: 0; transition: 0.3s; max-height: 100%; overflow-y: auto;
+}
+.post-card:hover .post-overlay { opacity: 1; }
+.post-card:hover img { transform: scale(1.05); }
+
+/* --- MODAL FIXES (Size & Rounding) --- */
+.post-form-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.post-form-container {
+  width: 100%; max-width: 500px; padding: 30px; background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; display: flex; flex-direction: column;
+  max-height: 85vh; overflow-y: auto;
+}
+.post-form-container::-webkit-scrollbar { width: 6px; }
+.post-form-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+/* --- FILE UPLOAD UI --- */
+.file-upload-wrapper { width: 100%; margin-bottom: 15px; flex-shrink: 0; }
+.file-upload-label {
+    display: flex; justify-content: center; align-items: center;
+    width: 100%; height: 150px; /* Fixed Height */
+    background: rgba(255, 255, 255, 0.05); border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px; cursor: pointer; transition: 0.3s;
+    overflow: hidden; position: relative;
+}
+.file-upload-label:hover { background: rgba(255, 255, 255, 0.1); border-color: #6366F1; }
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; color: #94a3b8; gap: 10px; }
+
+/* --- PREVIEW IMAGE FIX --- */
+.preview-img {
+  width: 100%; height: auto; max-height: 200px !important; object-fit: contain;
+  margin: 15px 0; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+}
+
+.edit-input, .edit-textarea { margin-bottom: 12px; background: #020617 !important; border-radius: 12px !important; }
+.edit-textarea { min-height: 100px; }
+
+/* --- ROUNDED BUTTONS --- */
+.post-form-container button { border-radius: 50px !important; padding: 12px; font-weight: 600; transition: 0.2s; }
+.fab-edit {
+  position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; border-radius: 50%;
+  background: #6366F1; color: white; border: none; font-size: 1.5rem; cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+}

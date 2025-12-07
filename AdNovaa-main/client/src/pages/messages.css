@@ -1,0 +1,206 @@
+/* ==============================
+   FILE: client/src/pages/messages.css
+   ============================== */
+
+/* LAYOUT */
+.messaging-page {
+  padding-top: 90px;
+  height: 100vh; width: 100%; display: flex;
+  background-color: #030b25; overflow: hidden;
+}
+.messaging-container {
+  display: flex; width: 100%; height: 100%;
+  background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* SIDEBAR */
+.msg-sidebar {
+  width: 350px; min-width: 300px; display: flex; flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.1); background: #0f172a;
+}
+.msg-header {
+  height: 80px; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center; background: #0f172a;
+}
+.user-profile { display: flex; align-items: center; gap: 15px; }
+.user-info h4 { margin: 0; font-size: 1rem;
+  color: white; font-weight: 700; }
+.user-email { font-size: 0.8rem; color: #94a3b8; }
+
+/* --- UPDATED TABS (Rounded) --- */
+.sidebar-tabs { 
+  display: flex; 
+  padding: 15px; 
+  gap: 10px; 
+  background: #020617; 
+}
+.tab-btn {
+  flex: 1; 
+  padding: 10px; 
+  background: transparent; 
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8; 
+  font-weight: 600; 
+  cursor: pointer;
+  border-radius: 25px; /* ROUNDED TABS */
+  transition: 0.3s;
+  font-size: 0.9rem;
+}
+.tab-btn.active { 
+  color: white; 
+  background: #6366F1; 
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* CONTACT LIST */
+.contact-list { flex: 1;
+  overflow-y: auto; padding: 10px; background: #0f172a; }
+.contact-item {
+  display: flex; align-items: center; padding: 12px; margin-bottom: 5px;
+  border-radius: 12px; /* Slightly more rounded list items */
+  cursor: pointer; transition: 0.2s;
+}
+.contact-item:hover { background: #1e293b; }
+.contact-item.active { background: rgba(99, 102, 241, 0.2); border-left: 3px solid #6366F1;
+}
+
+.avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #334155; }
+
+.contact-details { margin-left: 12px; flex: 1; overflow: hidden; }
+.contact-top { display: flex; justify-content: space-between; align-items: center; } /* Safety layout */
+.contact-name { font-weight: 600; color: white; font-size: 0.95rem; }
+.last-message { font-size: 0.8rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* CHAT AREA */
+.chat-area { flex: 1; display: flex; flex-direction: column; background: #0b1120; }
+.chat-header {
+  height: 80px;
+  padding: 0 25px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: space-between;
+  background: #0f172a; color: white;
+}
+
+.chat-role-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399; 
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px; 
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin-left: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.messages-feed {
+  flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  background-color: #0b1120;
+}
+.message-bubble { max-width: 70%; padding: 10px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; }
+.sent .message-bubble { background: #6366F1;
+  color: white; border-bottom-right-radius: 2px; align-self: flex-end; }
+.received .message-bubble { background: #1e293b; color: white; border-bottom-left-radius: 2px; align-self: flex-start;
+  border: 1px solid rgba(255,255,255,0.05); }
+.msg-time { font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: right; }
+.message-wrapper { display: flex; width: 100%;
+}
+.message-wrapper.sent { justify-content: flex-end; }
+
+/* INPUT */
+.chat-input-area {
+  padding: 15px 25px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 15px;
+  align-items: center; background: #0f172a;
+}
+.chat-input-area input {
+  background: #1e293b !important; border: 1px solid rgba(255,255,255,0.1) !important;
+  color: white !important;
+  padding: 12px 20px !important; border-radius: 20px !important; flex: 1;
+}
+.send-btn {
+  width: 45px; height: 45px; background: #6366F1; color: white;
+  border: none; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+.empty-chat {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%; width: 100%; color: #64748b; font-size: 1.5rem; font-weight: 300; letter-spacing: 1px;
+}
+
+/* REQUESTS */
+.request-item { background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+.request-actions { display: flex; gap: 10px; margin-top: 10px;
+}
+
+/* --- UPDATED BUTTONS (Send/Cancel) --- */
+.btn-accept { 
+  flex: 1; 
+  background: #6366F1; /* Primary Blue */
+  border: none; 
+  color: white; 
+  padding: 12px 20px; /* Bigger padding */
+  border-radius: 50px; /* PILL SHAPE */
+  cursor: pointer; 
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+.btn-accept:hover {
+    background: #4F46E5;
+}
+
+.btn-reject { 
+  flex: 1; 
+  background: rgba(239, 68, 68, 0.1); /* Subtle Red BG */
+  border: 1px solid #ef4444; 
+  color: #ef4444; 
+  padding: 12px 20px; /* Matches Accept */
+  border-radius: 50px; /* PILL SHAPE */
+  cursor: pointer; 
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+.btn-reject:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* INVITE */
+.invite-section {
+  padding: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background: #0f172a;
+}
+.invite-btn-main {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px dashed #64748b;
+  color: #94a3b8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+.invite-btn-main:hover {
+  border-color: #6366F1;
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.invite-form input { margin-bottom: 10px;
+  width: 100%; }
+.invite-actions { display: flex; gap: 10px; }
