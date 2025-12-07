@@ -1,8 +1,8 @@
 // ==============================
 // FILE: server/utils/socialScraper.js
 // ==============================
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 const parseCount = (str) => {
     if (!str) return 0;
@@ -98,4 +98,6 @@ export const scrapeSocials = async (instaHandle, ytHandle) => {
     }
 
     return totalFollowers;
+    
 };
+export { scrapeSocials };
