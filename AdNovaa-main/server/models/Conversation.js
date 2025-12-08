@@ -4,8 +4,7 @@ const ConversationSchema = new mongoose.Schema({
   participants: [{
     type: String,
     required: true
-  }], // ["user1@email.com", "user2@email.com"]
-  // Ensure at least one participant
+  }], 
   participants: {
     type: [String],
     required: true,

@@ -1,6 +1,3 @@
-// ==============================
-// FILE: server/index.js
-// ==============================
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -11,9 +8,7 @@ import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
 import cron from "node-cron"; 
-import { scrapeSocials } from "./utils/socialScraper.js";
-
-// Route Imports
+import puppeteer from "puppeteer";
 import authRoutes from './routes/auth.js';
 import postRoutes from "./routes/Posts.js"; 
 import Request from "./models/Request.js"; 
@@ -23,19 +18,19 @@ import User from "./models/User.js";
 
 dotenv.config();
 
-// Fix directory path for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
 
-// --- DYNAMIC CORS CONFIG ---
-// We allow Localhost (dev) and the Production URL (from .env)
+let browser = null;
+let scrapeQueue = Promise.resolve();
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  process.env.CLIENT_URL // You will set this in Render Dashboard later (e.g., https://adnova.vercel.app)
+  process.env.CLIENT_URL
 ];
 
 const io = new Server(httpServer, {
@@ -53,10 +48,8 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json());
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to MongoDB Atlas (Production DB)
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log("MongoDB connection error:", err));
@@ -64,26 +57,86 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes); 
 
-// --- CRON JOB: REFRESH FOLLOWERS EVERY 24 HRS ---
+app.post("/api/scrape", async (req, res) => {
+    const { username } = req.body;
+    scrapeQueue = scrapeQueue.then(async () => {
+        let page = null;
+        try {
+            if (!browser || !browser.isConnected()) {
+                browser = await puppeteer.launch({
+                    headless: "new",
+                    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote', '--single-process', '--disable-gpu']
+                });
+            }
+            page = await browser.newPage();
+            await page.setRequestInterception(true);
+            page.on('request', (req) => {
+                if (['image', 'stylesheet', 'font'].includes(req.resourceType())) req.abort();
+                else req.continue();
+            });
+            await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            const data = await page.evaluate(() => {
+                const meta = document.querySelector('meta[property="og:description"]');
+                if (meta) {
+                    const content = meta.content;
+                    const followersMatch = content.match(/([0-9.,KMB]+)\s+Followers/);
+                    return followersMatch ? followersMatch[1] : null;
+                }
+                return null;
+            });
+            res.json({ success: true, count: data });
+        } catch (error) {
+            console.error(error);
+            if (!res.headersSent) res.status(500).json({ error: "Failed to scrape" });
+        } finally {
+            if (page) await page.close();
+        }
+    }).catch(e => console.error("Queue Error:", e));
+});
+
 cron.schedule('0 0 * * *', async () => {
     console.log("Running Daily Social Scraper...");
     try {
         const influencers = await User.find({ role: 'influencer' });
         for (const user of influencers) {
-            const inf = user.influencerProfile;
-            if (inf.instagramHandle || inf.youtubeHandle) {
-                const count = await scrapeSocials(inf.instagramHandle, inf.youtubeHandle);
-                if (count > 0) {
-                    user.influencerProfile.followerCount = count;
-                    user.influencerProfile.lastSocialUpdate = new Date();
-                    await user.save();
-                }
-            }
+            scrapeQueue = scrapeQueue.then(async () => {
+                const inf = user.influencerProfile;
+                if (!inf.instagramHandle) return;
+                let page = null;
+                try {
+                    if (!browser || !browser.isConnected()) {
+                        browser = await puppeteer.launch({
+                            headless: "new",
+                            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process']
+                        });
+                    }
+                    page = await browser.newPage();
+                    await page.setRequestInterception(true);
+                    page.on('request', (req) => {
+                        if (['image', 'stylesheet', 'font'].includes(req.resourceType())) req.abort();
+                        else req.continue();
+                    });
+                    await page.goto(`https://www.instagram.com/${inf.instagramHandle}/`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+                    const count = await page.evaluate(() => {
+                        const meta = document.querySelector('meta[property="og:description"]');
+                        if (meta) {
+                            const match = meta.content.match(/([0-9.,KMB]+)\s+Followers/);
+                            return match ? match[1] : null;
+                        }
+                        return null;
+                    });
+                    if (count) {
+                        user.influencerProfile.followerCount = count;
+                        user.influencerProfile.lastSocialUpdate = new Date();
+                        await user.save();
+                    }
+                } catch (e) { console.error(`Failed for ${inf.instagramHandle}`, e); }
+                finally { if (page) await page.close(); }
+            });
         }
     } catch (e) { console.error("Cron Error", e); }
 });
 
-// --- SOCKET LOGIC ---
 io.on("connection", (socket) => {
   socket.on("register_user", async (email) => {
     if (!email) return;
@@ -93,13 +146,11 @@ io.on("connection", (socket) => {
       const pendingRequests = await Request.find({ receiverEmail: normalizedEmail });
       socket.emit("existing_requests", pendingRequests);
       const conversations = await Conversation.find({ participants: normalizedEmail });
-      
       const formattedConversations = await Promise.all(conversations.map(async (conv) => {
         const otherUserEmail = conv.participants.find(p => p !== normalizedEmail) || normalizedEmail;
         const user = await User.findOne({ email: otherUserEmail });
         let displayName = otherUserEmail.split("@")[0];
         let displayImage = ""; 
-
         if (user) {
             if (user.role === 'business') {
                 displayName = user.businessProfile?.brandName || user.name;
@@ -109,7 +160,6 @@ io.on("connection", (socket) => {
                 displayImage = user.influencerProfile?.pfp;
             }
         }
-
         return {
           id: conv._id,
           email: otherUserEmail,
@@ -145,11 +195,9 @@ io.on("connection", (socket) => {
     const sender = requestData.email.toLowerCase();
     const receiver = to.toLowerCase();
     if (sender === receiver) return;
-    
     const existingConv = await Conversation.findOne({ participants: { $all: [sender, receiver] } });
     const existingReq = await Request.findOne({ $or: [{ senderEmail: sender, receiverEmail: receiver }, { senderEmail: receiver, receiverEmail: sender }] });
     if (existingConv || existingReq) return; 
-
     const newRequest = new Request({ senderName: requestData.name, senderEmail: sender, receiverEmail: receiver, timestamp: requestData.time });
     await newRequest.save();
     socket.to(receiver).emit("receive_request", { ...requestData, _id: newRequest._id });
@@ -164,13 +212,11 @@ io.on("connection", (socket) => {
     const newConv = new Conversation({ participants: [senderEmail, myEmail], lastMessage: "Conversation Started", lastMessageTime: "Now" });
     await newConv.save();
     await Request.findByIdAndDelete(requestId);
-    
     const acceptorUser = await User.findOne({ email: myEmail });
     let acceptorImage = "";
     if(acceptorUser) {
       acceptorImage = acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp;
     }
-
     socket.to(senderEmail).emit("request_accepted", { email: myEmail, name: acceptorName, image: acceptorImage, conversationId: newConv._id });
     socket.emit("request_accepted_confirm", { email: senderEmail, conversationId: newConv._id });
   });
