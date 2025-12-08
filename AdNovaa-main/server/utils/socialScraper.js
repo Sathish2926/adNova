@@ -38,9 +38,7 @@ export const scrapeSocials = async (instaHandle, youtubeHandle) => {
         if(instaHandle){
             try{
                 await page.goto(`https://www.instagram.com/${instaHandle}/`, {waitUntil:'networkidle2', timeout:30000});
-                
-                await page.mouse.move(Math.random()*100, Math.random()*100);
-                await delay(500);
+
 
                 const metaContent = await page.evaluate(() => {
                     const meta = document.querySelector('meta[name="description"]');

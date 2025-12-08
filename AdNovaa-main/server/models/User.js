@@ -29,7 +29,6 @@ const influencerProfileSchema = new mongoose.Schema({
     pfp: { type: String, trim: true, set: emptyStringToNull },
     coverUrl: { type: String, trim: true, set: emptyStringToNull },
     
-    // CHANGED: Added phoneNumber here to fix data loss
     phoneNumber: { type: String, trim: true }, 
 
     instagramHandle: { type: String, trim: true },
