@@ -14,7 +14,7 @@ import cron from "node-cron";
 import { scrapeSocials } from "./utils/socialScraper.js";
 
 // Route Imports
-import authRoutes from "./routes/auth.js";
+import authRoutes from './routes/auth.js';
 import postRoutes from "./routes/Posts.js"; 
 import Request from "./models/Request.js"; 
 import Message from "./models/Message.js";

@@ -1,132 +1,49 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-
-const RESET_PASSWORD_API_URL = "http://localhost:5000/api/auth/reset-password";
-
-const ResetPassword = () => {
-  const { token } = useParams();
-  const navigate = useNavigate();
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); // 'success' or 'error'
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!token) {
-      setMessage("Invalid reset link.");
-      setMessageType("error");
-    }
-  }, [token]);
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-
-    if (!newPassword || !confirmPassword) {
-      setMessage("Please fill in all fields.");
-      setMessageType("error");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setMessage("Passwords do not match.");
-      setMessageType("error");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setMessage("Password must be at least 6 characters long.");
-      setMessageType("error");
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage("");
-
-    try {
-      const response = await fetch(RESET_PASSWORD_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("Password reset successfully! Redirecting to login...");
-        setMessageType("success");
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
-      } else {
-        setMessage(data.message || "Failed to reset password.");
-        setMessageType("error");
-      }
-    } catch (error) {
-      console.error("Reset Password Error:", error);
-      setMessage("An error occurred. Please try again.");
-      setMessageType("error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="d-flex align-items-center justify-content-center min-vh-100" style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" }}>
-      <div className="card border-0 shadow-lg p-5" style={{ maxWidth: "400px", borderRadius: "18px", background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" }}>
-        <h3 className="text-white text-center mb-4 fw-bold">Reset Your Password</h3>
-
-        <form onSubmit={handleResetPassword}>
-          <div className="mb-3">
-            <label className="form-label fw-semibold text-white">New Password</label>
-            <input
-              type="password"
-              className="form-control p-3"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              style={{ background: "#1b072aff", border: "1px solid #0f0a27cc", borderRadius: "12px", color: "white" }}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label fw-semibold text-white">Confirm Password</label>
-            <input
-              type="password"
-              className="form-control p-3"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{ background: "#1b072aff", border: "1px solid #0f0a27cc", borderRadius: "12px", color: "white" }}
-            />
-          </div>
-
-          {message && (
-            <div className={`alert ${messageType === "success" ? "alert-success" : "alert-danger"} py-2 px-3 mb-3`} role="alert">
-              <small>{message}</small>
-            </div>
-          )}
-
-          <button
-            className="btn w-100 py-3 mt-3"
-            style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", borderRadius: "12px", border: "none", fontWeight: "600", fontSize: "1rem", color: "white" }}
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? "Resetting..." : "Reset Password"}
-          </button>
-        </form>
-
-        <div className="text-center mt-4">
-          <a href="/" style={{ color: "#6366F1", textDecoration: "none", fontSize: "0.9rem" }}>
-            Back to Home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+import {useState} from "react";
+import {useParams,useNavigate} from "react-router-dom";
+import API_BASE_URL from "../apiConfig";
+const ResetPassword=()=>{
+const {token}=useParams();
+const navigate=useNavigate();
+const [password,setPassword]=useState("");
+const [confirmPassword,setConfirmPassword]=useState("");
+const [message,setMessage]=useState("");
+const [error,setError]=useState("");
+const [loading,setLoading]=useState(false);
+const handleSubmit=async(e)=>{
+e.preventDefault();
+setMessage("");
+setError("");
+if(password!==confirmPassword){setError("Passwords do not match");return;}
+setLoading(true);
+try{
+const response=await fetch(`${API_BASE_URL}/api/auth/reset-password/${token}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});
+const contentType=response.headers.get("content-type");
+let data;
+if(contentType&&contentType.indexOf("application/json")!==-1){data=await response.json();}else{throw new Error("Server returned non-JSON response.");}
+if(response.ok){alert("Password reset successfully!");navigate("/");}else{setError(data.message||"Error resetting password");}
+}catch(err){console.error(err);setError(err.message||"Connection failed.");}finally{setLoading(false);}
 };
-
+return(
+<div className="d-flex justify-content-center align-items-center vh-100" style={{backgroundColor:"#030b25"}}>
+<div className="card p-4 shadow-lg border-0" style={{width:"100%",maxWidth:"400px",borderRadius:"18px",background:"linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",border:"1px solid rgba(255,255,255,0.1)",color:"white"}}>
+<h3 className="text-center mb-4 fw-bold" style={{color:"white"}}>Reset Password</h3>
+{error&&<div className="alert alert-danger py-2" role="alert">{error}</div>}
+{message&&<div className="alert alert-success py-2" role="alert">{message}</div>}
+<form onSubmit={handleSubmit}>
+<div className="mb-3">
+<label className="form-label fw-semibold">New Password</label>
+<input type="password" className="form-control p-3" placeholder="Enter new password" value={password} onChange={(e)=>setPassword(e.target.value)} required minLength={6} style={{background:"#020617",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"12px",color:"white"}}/>
+</div>
+<div className="mb-4">
+<label className="form-label fw-semibold">Confirm Password</label>
+<input type="password" className="form-control p-3" placeholder="Confirm password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required style={{background:"#020617",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"12px",color:"white"}}/>
+</div>
+<button type="submit" className="btn w-100 py-3 fw-bold" disabled={loading} style={{background:"linear-gradient(135deg, #6366F1, #4F46E5)",borderRadius:"12px",border:"none",color:"white",textTransform:"uppercase",letterSpacing:"1px"}}>
+{loading?"Updating...":"Update Password"}
+</button>
+</form>
+</div>
+</div>
+);
+};
 export default ResetPassword;

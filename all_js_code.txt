@@ -1,0 +1,4265 @@
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\about.jsx
+// ==============================
+import React from "react";
+const About = () => {
+  return <section id="about" className="about-section py-5 text-center text-white" data-aos="fade-up">
+
+        <div className="container" data-aos="fade-up">
+          <h2 className="fw-bold mb-4">About adNova</h2>
+          <p className="fs-5 mx-auto" style={{ maxWidth: "800px" }}>
+            adNova bridges the gap between brands and influencers, providing a
+            transparent, secure, and creative platform for smooth collaborations.
+          </p>
+        </div>
+      </section>;
+};
+export default About;
+ 
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\BusinessSection.jsx
+// ==============================
+import React from "react";
+const BusinessSection = () => {
+  return<section className="container py-5">
+   <div className="col-md-6" data-aos="fade-left">
+            <h3 className="text-white fw-bold">About the Business</h3>
+          </div>
+        <div className="row g-4">
+  <div className="col-md-4" data-aos="fade-up" data-aos-delay="0">
+    <div className="biz-card">
+      <img src="/assets/images/undefined (1).jpeg" alt="business" />
+    </div>
+  </div>
+
+  <div className="col-md-4" data-aos="fade-up" data-aos-delay="150">
+    <div className="biz-card"><img src="assets\images\undefined (3).jpeg" alt="" /></div>
+  </div>
+
+  <div className="col-md-4" data-aos="fade-up" data-aos-delay="300">
+    <div className="biz-card"><img src="assets\images\Photo colorful assortment of gents tshir….jpeg" alt=""  /></div>
+  </div>
+</div>
+
+      </section>;
+};
+export default BusinessSection;
+
+       {/* ABOUT BUSINESSES */}
+      
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\Chat.jsx
+// ==============================
+// ==============================
+// FILE: client/src/components/Chat.jsx
+// ==============================
+import React, { useEffect, useState, useRef } from "react";
+import io from "socket.io-client";
+import API_BASE_URL from "../apiConfig";
+
+function Chat({ username, room }) {
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [messageList, setMessageList] = useState([]);
+  const socketRef = useRef();
+
+  // Connect inside useEffect
+  useEffect(() => {
+    socketRef.current = io.connect(API_BASE_URL);
+    const socket = socketRef.current;
+
+    if (username !== "" && room !== "") {
+      socket.emit("join_room", room);
+    }
+
+    const handleReceiveMessage = (data) => {
+        setMessageList((list) => [...list, data]);
+    };
+  
+    socket.on("receive_message", handleReceiveMessage);
+  
+    return () => {
+        socket.disconnect();
+    };
+  }, [username, room]);
+
+  const sendMessage = async () => {
+    if (currentMessage !== "") {
+      const messageData = {
+        room: room,
+        author: username,
+        message: currentMessage,
+        time:
+          new Date(Date.now()).getHours() +
+          ":" +
+          new Date(Date.now()).getMinutes(),
+      };
+      await socketRef.current.emit("send_message", messageData);
+      setMessageList((list) => [...list, messageData]);
+      setCurrentMessage("");
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-[500px] w-full max-w-md mx-auto border border-gray-300 rounded-lg shadow-lg bg-white">
+      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
+        <h3 className="text-lg font-bold">Live Chat</h3>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messageList.map((messageContent, index) => {
+          const isMyMessage = username === messageContent.author;
+          return (
+            <div
+              key={index}
+              className={`flex ${isMyMessage ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[70%] p-3 rounded-lg ${
+                  isMyMessage
+                    ? "bg-blue-500 text-white rounded-br-none"
+                    : "bg-gray-200 text-gray-800 rounded-bl-none"
+                }`}
+              >
+                 <p className="text-sm">{messageContent.message}</p>
+                <div className="flex justify-between items-center mt-1 space-x-2">
+                  <span className={`text-xs ${isMyMessage ? "text-blue-100" : "text-gray-500"}`}>
+                    {messageContent.time}
+                  </span>
+                  <span className={`text-xs font-bold ${isMyMessage ? "text-blue-100" : "text-gray-600"}`}>
+                    {messageContent.author}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="p-4 bg-white border-t border-gray-200 rounded-b-lg">
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={currentMessage}
+            placeholder="Type a message..."
+            className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(event) => setCurrentMessage(event.target.value)}
+            onKeyPress={(event) => { event.key === "Enter" && sendMessage(); }}
+          />
+          <button
+            onClick={sendMessage}
+            className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            &#9658;
+         </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Chat;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\contact.jsx
+// ==============================
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\contact.jsx
+// ==============================
+import React from "react";
+const Contact = () => {
+  return (
+    // FIX: Explicit background to ensure text contrast
+    <section id="contact" className="py-5 text-center" style={{
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: '#030b25', 
+        position: 'relative',
+        zIndex: 5
+    }}>
+        <div className="container" data-aos="fade-up">
+          <h2 className="fw-bold mb-4" style={{color:'white'}}>Ready to start?</h2>
+          <p className="fs-5 mb-4" style={{color:'#cbd5e1'}}>Join thousands of brands and creators on adNova.</p>
+          
+          <div className="d-flex justify-content-center gap-4 mb-5">
+             <div>
+                <strong className="d-block text-white">Email</strong>
+                <span style={{color:'#94a3b8'}}>support@adnova.com</span>
+             </div>
+             <div>
+                <strong className="d-block text-white">Socials</strong>
+                <span style={{color:'#94a3b8'}}>@adnova_official</span>
+             </div>
+          </div>
+          
+          <p className="small" style={{color:'#64748b'}}>© 2025 adNova. All rights reserved.</p>
+        </div>
+      </section>
+  );
+};
+export default Contact;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\hero.jsx
+// ==============================
+import React from "react";
+
+const Hero = () => {
+  return (
+   <section
+          className="hero-section text-center text-white d-flex align-items-center justify-content-center"
+          data-aos="fade-up"
+        >
+          <div className="container" data-aos="fade-up">
+            <h1 className="display-4 fw-bold">
+              Connecting Businesses with the Right Influencers
+            </h1>
+            <p className="lead mt-3 mb-4">
+              adNova helps brands find influencers who match their audience, vision & goals.
+            </p>
+            <a href="#" className="btn btn-light btn-lg me-2">
+              Find Influencers
+            </a>
+            <a href="#" className="btn btn-outline-light btn-lg">
+              Join as Influencer
+            </a>
+          </div>
+        </section>
+  );
+};
+
+export default Hero;
+
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\influencerSection.jsx
+// ==============================
+const InfluencerSection = () => {
+  return <section className="container py-5">
+        <div className="row align-items-center">
+
+          <div className="col-md-6" data-aos="fade-left">
+            <h3 className="text-white fw-bold">About the Influencers</h3>
+            <p className="text-light">
+              Smart, creative individuals ready to boost your brand with high-engagement content.
+            </p>
+          </div>
+
+          <div className="col-md-6 d-flex gap-3 flex-wrap justify-content-center" data-aos="fade-right">
+            <img src="assets\images\Animation professionnelle de vos comptes….jpeg" className="info-img" />
+            <img src="assets\images\Free photo influencer marketing collage _ Free….jpeg" className="info-img" />
+            <img src="assets\images\A group of people in front of them is a list of….jpeg" className="info-img" />
+          </div>
+
+        </div>
+      </section>;
+};
+export default InfluencerSection;
+
+
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\loginModal.jsx
+// ==============================
+// ==============================
+// FILE: client/src/components/loginModal.jsx
+// ==============================
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+// CHANGED: Import Global API Config
+import API_BASE_URL from "../apiConfig";
+
+const LOGIN_API_URL = `${API_BASE_URL}/api/auth/login`; 
+const FORGOT_PASSWORD_API_URL = `${API_BASE_URL}/api/auth/forgot-password`;
+
+const LoginModal = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetMessageType, setResetMessageType] = useState("");
+  // 'success' or 'error'
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const navigate = useNavigate(); 
+  const { login } = useAuth();
+
+  const loginUser = async (credentials) => {
+    try {
+      const response = await fetch(LOGIN_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      const data = await response.json(); 
+
+      if (!response.ok) {
+        const errorMessage = data.message ||
+        `Login failed. Status: ${response.status}.`;
+        throw new Error(errorMessage);
+      }
+      return { success: true, ...data };
+    } catch (error) {
+      console.error("API Login Error:", error.message);
+      return { success: false, message: error.message };
+    }
+  };
+
+  const closeBootstrapModal = () => {
+    try {
+        const modalElement = document.getElementById('loginModal');
+        // Try Bootstrap instance method first
+        if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+            const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+            if(modalInstance) modalInstance.hide();
+            else {
+                // If no instance, create one to hide it cleanly
+                new window.bootstrap.Modal(modalElement).hide();
+            }
+        } else if(modalElement) {
+             // Fallback DOM manipulation
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = ''; 
+            document.body.style.paddingRight = '';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if(backdrop) backdrop.remove();
+        }
+    } catch (err) {
+        console.error("Error closing modal:", err);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    const response = await loginUser({ email, password });
+    if (response.success) {
+      login(response);
+      const role = response.role; 
+      let dashboardPath = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
+      closeBootstrapModal(); 
+      navigate(dashboardPath, { replace: true });
+    } else {
+      console.error("Login failed: " + response.message);
+      alert(response.message);
+      // Added user feedback
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      setResetMessage("Please enter your email address.");
+      setResetMessageType("error");
+      return;
+    }
+
+    setIsResettingPassword(true);
+    setResetMessage("");
+    
+    try {
+      const response = await fetch(FORGOT_PASSWORD_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setResetMessage("Password reset link sent to your email. Please check your inbox.");
+        setResetMessageType("success");
+        setForgotPasswordEmail("");
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setResetMessage("");
+        }, 3000);
+      } else {
+        setResetMessage(data.message || "Failed to send reset link.");
+        setResetMessageType("error");
+      }
+    } catch (error) {
+      console.error("Forgot Password Error:", error);
+      setResetMessage("An error occurred. Please try again.");
+      setResetMessageType("error");
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  return (
+    <div className="modal fade" id="loginModal" tabIndex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div className="modal-dialog modal-dialog-centered">
+        <form className="modal-content border-0 shadow-lg needs-validation" style={{ borderRadius: "18px", background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)", padding: "25px", color: "white" }} noValidate onSubmit={showForgotPassword ? handleForgotPassword : handleLogin} >
+          <div className="modal-header border-0">
+            <h4 className="modal-title fw-bold" id="loginModalLabel" style={{ fontSize: "1.6rem" }}>
+              {showForgotPassword ? "Reset Password" : "Welcome Back"}
+            </h4>
+            <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div className="modal-body">
+            {!showForgotPassword ? (
+              <>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Email</label>
+                  <input type="email" className="form-control p-3" placeholder="Enter your email" required style={{ background: "#1b072aff", border: "1px solid #0f0a27cc", borderRadius: "12px", color: "white" }} value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Password</label>
+                  <input type="password" className="form-control p-3" placeholder="Enter your password" required style={{ background: "#1b072aff", border: "1px solid #ffffff20", borderRadius: "12px", color: "white" }} value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+
+                <button className="btn w-100 py-3 mt-3" style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", borderRadius: "12px", border: "none", 
+                fontWeight: "600", fontSize: "1rem", color: "white" }} type="submit">Login</button>
+                
+                <div className="text-center mt-3">
+                  <button type="button" className="btn btn-link text-decoration-none" style={{ color: "#6366F1", fontSize: "0.9rem" }} onClick={() => setShowForgotPassword(true)}>
+                    Forgot your password?
+                  </button>
+                </div>
+                
+                {/* REMOVED INSTAGRAM LOGIN BUTTON */}
+              </>
+            ) : (
+              <>
+                <p className="text-light mb-3">Enter your email address to receive a password reset link.</p>
+                
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Email</label>
+                  <input 
+                    type="email" 
+                    className="form-control p-3" 
+                    placeholder="Enter your registered email" 
+                    required 
+                    style={{ background: "#1b072aff", border: "1px solid #0f0a27cc", borderRadius: "12px", color: "white" }} 
+                    value={forgotPasswordEmail} 
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)} 
+                  />
+                </div>
+
+                {resetMessage && (
+                  <div className={`alert ${resetMessageType === 'success' ?
+                  'alert-success' : 'alert-danger'} py-2 px-3 mb-3`} role="alert">
+                    <small>{resetMessage}</small>
+                  </div>
+                )}
+
+                <button 
+                  className="btn w-100 py-3 mt-3" 
+                  style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", borderRadius: "12px", border: "none", fontWeight: "600", fontSize: "1rem", color: "white" }} 
+                  type="submit"
+                  disabled={isResettingPassword}
+                >
+                  {isResettingPassword ? "Sending..." : "Send Reset Link"}
+                </button>
+
+                <div className="text-center mt-3">
+                  <button 
+                    type="button" 
+                    className="btn btn-link text-decoration-none" 
+                    style={{ color: "#6366F1", fontSize: "0.9rem" }} 
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetMessage("");
+                      setForgotPasswordEmail("");
+                    }}
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default LoginModal;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\navbar.jsx
+// ==============================
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom"; 
+import { useAuth } from "../contexts/AuthContext";
+
+const Navbar = () => {
+  const { isLoggedIn, role, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation(); 
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const dashboardLink = role === "business" ? "/BusinessDashboard" : "/InfluencerDashboard";
+  const isActive = (path) => location.pathname === path ? "active" : "";
+
+  return (
+    <nav className="navbar navbar-expand-lg custom-navbar">
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/">✦adNova</Link>
+
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span className="navbar-toggler-icon" style={{filter: 'invert(1)'}}></span>
+          </button>
+
+          <div className="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+            <ul className="navbar-nav mb-2 mb-lg-0">
+              
+              {/* LOGGED IN LINKS */}
+              {isLoggedIn ? (
+                <>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/')}`} to="/">Home</Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/marketplace')}`} to="/marketplace">Find Partners</Link>
+                    </li>
+                    <li className="nav-item">
+                         <Link className={`nav-link ${isActive(dashboardLink)}`} to={dashboardLink}>My Dashboard</Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link className={`nav-link ${isActive('/messages')}`} to="/messages">Messages</Link>
+                    </li>
+                </>
+              ) : (
+                /* GUEST LINKS (Scroll Anchors) */
+                <>
+                    <li className="nav-item"><a className="nav-link" href="#home">Home</a></li>
+                    <li className="nav-item"><a className="nav-link" href="#services">Services</a></li>
+                    <li className="nav-item"><a className="nav-link" href="#about">About Us</a></li>
+                </>
+              )}
+            </ul>
+          </div>
+
+          <div className="d-flex align-items-center">
+            {isLoggedIn ? (
+                <button className="btn btn-outline-danger" onClick={handleLogout}>
+                    Logout
+                </button>
+            ) : (
+                <>
+                    <button className="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <i className="fa-solid fa-right-to-bracket me-1"></i> Login
+                    </button>
+                    <button className="btn btn-light text-dark" data-bs-toggle="modal" data-bs-target="#signupModal">
+                    <i className="fa-solid fa-user-plus me-1"></i> Signup
+                    </button>
+                </>
+            )}
+          </div>
+        </div>
+      </nav>
+  );
+};
+
+export default Navbar;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\ProfileSetup.jsx
+// ==============================
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext'; 
+import Navbar from './navbar'; 
+import '../styles/profilesetup.css';
+import API_BASE_URL from "../apiConfig";
+
+const PROFILE_UPDATE_API_URL = `${API_BASE_URL}/api/auth/update-profile`;
+const PROFILE_FETCH_URL = (id) => `${API_BASE_URL}/api/auth/profile/${id}`;
+
+const COMMON_NICHES = [
+    "Fashion", "Beauty", "Tech", "Gaming", "Travel", "Food", 
+    "Fitness", "Health", "Lifestyle", "Parenting", "Business", 
+    "Finance", "Education", "Entertainment", "Music", "Art"
+];
+
+export default function ProfileSetup() { 
+    const { role, userId, completeProfile } = useAuth();
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Initial States
+    const [bizData, setBizData] = useState({
+        brandName: '', industry: '', websiteUrl: '', location: '',
+        targetAudience: '', budgetMin: '', budgetMax: '', niches: []
+    });
+
+    const [infData, setInfData] = useState({
+        displayName: '', niche: '', location: '', bio: '',
+        instagramHandle: '', youtubeHandle: '', rateCard: '', niches: []
+    });
+
+    const [customNiche, setCustomNiche] = useState("");
+    const [hasInsta, setHasInsta] = useState(false);
+    const [hasYT, setHasYT] = useState(false);
+
+    // --- PRE-FILL DATA FROM SIGNUP ---
+    useEffect(() => {
+        if(userId) {
+            fetch(PROFILE_FETCH_URL(userId))
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    if (role === 'business') {
+                        setBizData(prev => ({
+                            ...prev,
+                            brandName: data.user.businessProfile?.brandName || data.user.name || '',
+                            // Map other fields if needed
+                        }));
+                    } else {
+                        setInfData(prev => ({
+                            ...prev,
+                            displayName: data.user.influencerProfile?.displayName || data.user.name || '',
+                        }));
+                    }
+                }
+            })
+            .catch(console.error);
+        }
+    }, [userId, role]);
+
+    if (!userId) return <Navigate to="/" replace />;
+    
+    const isBusiness = role === 'business';
+
+    const toggleNiche = (niche) => {
+        if (isBusiness) {
+            setBizData(prev => {
+                const exists = prev.niches.includes(niche);
+                return { ...prev, niches: exists ? prev.niches.filter(n => n !== niche) : [...prev.niches, niche] };
+            });
+        } else {
+            setInfData(prev => {
+                const exists = prev.niches.includes(niche);
+                return { ...prev, niches: exists ? prev.niches.filter(n => n !== niche) : [...prev.niches, niche] };
+            });
+        }
+    };
+
+    const addCustomNiche = (e) => {
+        e.preventDefault();
+        if (customNiche && !COMMON_NICHES.includes(customNiche)) {
+            toggleNiche(customNiche);
+            setCustomNiche("");
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        let profilePayload = isBusiness ? bizData : {
+            ...infData,
+            instagramHandle: hasInsta ? infData.instagramHandle : "",
+            youtubeHandle: hasYT ? infData.youtubeHandle : ""
+        };
+        
+        try {
+            const response = await fetch(PROFILE_UPDATE_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, role, profileData: profilePayload }),
+            });
+
+            if (!response.ok) throw new Error("Server Error");
+            const data = await response.json();
+
+            if (data.success) {
+                completeProfile(); 
+                const path = isBusiness ? '/BusinessDashboard' : '/InfluencerDashboard';
+                navigate(path, { replace: true });
+            } else {
+                alert('Update failed: ' + data.message);
+            }
+        } catch (error) { console.error(error); } finally { setIsLoading(false); }
+    };
+
+    const currentNiches = isBusiness ? bizData.niches : infData.niches;
+
+    return (
+        <>
+        <Navbar />
+        <div className="profile-page-wrapper">
+            <div className='profile-setup-container'>
+                <h2>{isBusiness ? 'Business Profile' : 'Creator Profile'}</h2>
+                <p>Complete your details to access the marketplace.</p>
+                
+                <form onSubmit={handleSubmit} className='profile-setup-form'>
+                    {isBusiness ? (
+                        <>
+                            <input type="text" placeholder="Brand Name" required value={bizData.brandName} onChange={e => setBizData({...bizData, brandName: e.target.value})} />
+                            <input type="text" placeholder="Industry" required value={bizData.industry} onChange={e => setBizData({...bizData, industry: e.target.value})} />
+                            <input type="text" placeholder="Website URL" value={bizData.websiteUrl} onChange={e => setBizData({...bizData, websiteUrl: e.target.value})} />
+                            <input type="text" placeholder="Location" value={bizData.location} onChange={e => setBizData({...bizData, location: e.target.value})} />
+                            <textarea placeholder="Describe your target audience..." required rows="4" value={bizData.targetAudience} onChange={e => setBizData({...bizData, targetAudience: e.target.value})} />
+                            
+                            {/* CHANGED: MANUAL BUDGET RANGE */}
+                            <div style={{display:'flex', gap:'15px'}}>
+                                <input type="number" placeholder="Min Budget ($)" value={bizData.budgetMin} onChange={e => setBizData({...bizData, budgetMin: e.target.value})} />
+                                <input type="number" placeholder="Max Budget ($)" value={bizData.budgetMax} onChange={e => setBizData({...bizData, budgetMax: e.target.value})} />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <input type="text" placeholder="Display Name / Handle" required value={infData.displayName} onChange={e => setInfData({...infData, displayName: e.target.value})} />
+                            <input type="text" placeholder="Location" value={infData.location} onChange={e => setInfData({...infData, location: e.target.value})} />
+                            <textarea placeholder="Bio..." required rows="4" value={infData.bio} onChange={e => setInfData({...infData, bio: e.target.value})} />
+                            
+                            <div className="social-toggle-group">
+                                <label className="social-checkbox"><input type="checkbox" checked={hasInsta} onChange={e => setHasInsta(e.target.checked)} /> Instagram</label>
+                                <label className="social-checkbox"><input type="checkbox" checked={hasYT} onChange={e => setHasYT(e.target.checked)} /> YouTube</label>
+                            </div>
+
+                            {hasInsta && <input type="text" placeholder="Instagram Handle" value={infData.instagramHandle} onChange={e => setInfData({...infData, instagramHandle: e.target.value})} />}
+                            {hasYT && <input type="text" placeholder="YouTube Handle" value={infData.youtubeHandle} onChange={e => setInfData({...infData, youtubeHandle: e.target.value})} />}
+
+                            <input type="text" placeholder="Link to Rate Card (Optional)" value={infData.rateCard} onChange={e => setInfData({...infData, rateCard: e.target.value})} />
+                        </>
+                    )}
+
+                    {/* NICHE SELECTOR */}
+                    <div className="niche-selector">
+                        <label style={{color:'white', fontWeight:'600', marginBottom:'10px', display:'block'}}>Select Niches (Max 5)</label>
+                        <div className="niche-pills">
+                            {COMMON_NICHES.map(n => (
+                                <span key={n} className={`niche-pill ${currentNiches.includes(n) ? 'active' : ''}`} onClick={() => toggleNiche(n)}>{n}</span>
+                            ))}
+                            {currentNiches.filter(n => !COMMON_NICHES.includes(n)).map(n => (
+                                <span key={n} className="niche-pill active" onClick={() => toggleNiche(n)}>{n} ✕</span>
+                            ))}
+                        </div>
+                        <div className="custom-niche-input" style={{display:'flex', gap:'10px', marginTop:'10px'}}>
+                            <input type="text" placeholder="Add custom niche..." value={customNiche} onChange={e => setCustomNiche(e.target.value)} onKeyPress={e => e.key === 'Enter' && addCustomNiche(e)} />
+                            <button type="button" className="btn-primary" onClick={addCustomNiche} style={{padding:'8px 16px', fontSize:'0.9rem'}}>Add</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" disabled={isLoading}>{isLoading ? 'Syncing...' : 'Complete Setup'}</button>
+                </form>
+            </div>
+        </div>
+        </>
+    );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\reviews.jsx
+// ==============================
+ 
+ const Reviews = () => {
+  return <section className="container py-5">
+        <h3 className="text-white fw-bold mb-4" data-aos="fade-up">User Reviews</h3>
+
+        <div className="row g-4">
+          <div className="col-md-6" data-aos="zoom-in">
+            <div className="review-card p-4">"A perfect piece of design!"</div>
+          </div>
+
+          <div className="col-md-6" data-aos="zoom-in">
+            <div className="review-card p-4">"The smartest tool out there!"</div>
+          </div>
+        </div>
+      </section>;
+};
+export default Reviews;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\services.jsx
+// ==============================
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\services.jsx
+// ==============================
+import React from "react";
+
+const Services = () => {
+  return (
+    <section id="services" className="services-section">
+      <div className="container text-center">
+        <h2 className="mb-5">Our Services</h2>
+        <div className="row g-5">
+          <div className="col-md-4" data-aos="fade-up">
+            <div className="service-box">
+              <h4>Business Promotion</h4>
+              <p>Promote your business through verified influencers and gain authentic visibility.</p>
+            </div>
+          </div>
+          <div className="col-md-4" data-aos="fade-up" data-aos-delay="200">
+            <div className="service-box">
+              <h4>Secure Collabs</h4>
+              <p>Safe, transparent collaboration with influencers for honest results.</p>
+            </div>
+          </div>
+          <div className="col-md-4" data-aos="fade-up" data-aos-delay="400">
+            <div className="service-box">
+              <h4>Brand Growth</h4>
+              <p>Grow your brand with analytics, reporting and influencer tracking.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+export default Services;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\components\signupModal.jsx
+// ==============================
+// ==============================
+// FILE: client/src/components/signupModal.jsx
+// ==============================
+import React from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom"; 
+// CHANGED: Import API Config
+import API_BASE_URL from "../apiConfig";
+
+// Helper to switch tabs
+const switchTab = (tab) => {
+  const infTab = document.getElementById("infTab");
+  const bizTab = document.getElementById("bizTab");
+  const infForm = document.getElementById("influencerForm");
+  const bizForm = document.getElementById("businessForm");
+  if (tab === "influencer") {
+    infTab.classList.add("active");
+    bizTab.classList.remove("active");
+    infForm.classList.remove("d-none");
+    bizForm.classList.add("d-none");
+  } else {
+    bizTab.classList.add("active");
+    infTab.classList.remove("active");
+    bizForm.classList.remove("d-none");
+    infForm.classList.add("d-none");
+  }
+};
+
+const SignupModal = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate(); 
+
+  const closeBootstrapModal = () => {
+    const modalElement = document.getElementById('signupModal');
+    if (modalElement) {
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const instance = window.bootstrap.Modal.getInstance(modalElement);
+            if(instance) instance.hide();
+            else new window.bootstrap.Modal(modalElement).hide();
+        } else {
+            // Fallback
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if(backdrop) backdrop.remove();
+        }
+    }
+  };
+
+  const handleInfluencerSignup = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+    const name = document.getElementById("inf_name").value;
+    const email = document.getElementById("inf_email").value;
+    const phone = document.getElementById("inf_phone").value; // Capture Phone
+    const password = document.getElementById("inf_pass").value;
+    const role = "influencer";
+    try {
+      // CHANGED: Use API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role, phone }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      login(data);
+      closeBootstrapModal();
+      navigate('/profile-setup');
+    } catch (err) {
+      console.error("Signup Failed: ", err.message);
+      alert(err.message);
+    }
+  };
+
+  const handleBusinessSignup = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+    const businessName = document.getElementById("biz_name").value;
+    const ownerName = document.getElementById("biz_owner").value;
+    const email = document.getElementById("biz_email").value;
+    const phone = document.getElementById("biz_phone").value;
+    const password = document.getElementById("biz_pass").value;
+    const role = "business";
+    try {
+      // CHANGED: Use API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ businessName, ownerName, email, password, role, phone }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      login(data);
+      closeBootstrapModal();
+      navigate('/profile-setup');
+    } catch (err) {
+      console.error("Signup Failed: ", err.message);
+      alert(err.message);
+    }
+  };
+
+  const tabStyle = {
+    flex: 1, padding: '12px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+    cursor: 'pointer', fontWeight: '600', transition: '0.3s', textAlign: 'center',
+    background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8'
+  };
+  const activeTabStyle = {
+    ...tabStyle,
+    background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: 'white', borderColor: 'transparent',
+    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)'
+  };
+
+  return (
+    <div className="modal fade" id="signupModal" tabIndex="-1" aria-hidden="true">
+      <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h4 className="modal-title">Create Your Account</h4>
+            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div className="modal-body p-4">
+           
+            <div className="d-flex gap-3 mb-4">
+              <div id="infTab" className="active"
+                onClick={(e) => {
+                    switchTab("influencer");
+                    e.currentTarget.style.cssText = `flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: linear-gradient(135deg, #6366F1, #4F46E5); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);`;
+                    document.getElementById("bizTab").style.cssText = `flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: rgba(255, 255, 255, 0.05); color: #94a3b8;`;
+                }}
+                style={activeTabStyle}>INFLUENCER</div>
+              <div id="bizTab" onClick={(e) => {
+                    switchTab("business");
+                    e.currentTarget.style.cssText = `flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: linear-gradient(135deg, #6366F1, #4F46E5); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);`;
+                    document.getElementById("infTab").style.cssText = `flex: 1; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; background: rgba(255, 255, 255, 0.05); color: #94a3b8;`;
+                }}
+                style={tabStyle}>BUSINESS</div>
+            </div>
+
+            <form id="influencerForm" className="needs-validation" noValidate onSubmit={handleInfluencerSignup}>
+              <div className="mb-3"><label className="form-label text-white">Full Name</label><input id="inf_name" className="form-control" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Email</label><input id="inf_email" className="form-control" type="email" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Phone</label><input id="inf_phone" className="form-control" type="tel" /></div>
+              <div className="mb-4"><label className="form-label text-white">Password</label><input id="inf_pass" className="form-control" type="password" minLength={6} required /></div>
+              <button className="btn btn-primary w-100 py-3" type="submit">Create Influencer Account</button>
+            </form>
+
+            <form id="businessForm" className="d-none needs-validation" noValidate onSubmit={handleBusinessSignup}>
+              <div className="mb-3"><label className="form-label text-white">Business Name</label><input id="biz_name" className="form-control" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Owner Name</label><input id="biz_owner" className="form-control" /></div>
+              <div className="mb-3"><label className="form-label text-white">Email</label><input id="biz_email" className="form-control" type="email" required /></div>
+              <div className="mb-3"><label className="form-label text-white">Contact</label><input id="biz_phone" className="form-control" type="tel" /></div>
+              <div className="mb-4"><label className="form-label text-white">Password</label><input id="biz_pass" className="form-control" type="password" minLength={6} required /></div>
+              <button className="btn btn-primary w-100 py-3" type="submit">Create Business Account</button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SignupModal;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\contexts\AuthContext.jsx
+// ==============================
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+// 1. Create the Context object
+const AuthContext = createContext(null);
+
+// 2. Custom hook for easy access
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+// 3. Provider component
+export const AuthProvider = ({ children }) => {
+  // Initialize state from sessionStorage (Unique per tab)
+  const [authState, setAuthState] = useState(() => {
+    // Changed localStorage to sessionStorage
+    const storedAuth = sessionStorage.getItem('auth');
+    if (storedAuth) {
+      try {
+        return JSON.parse(storedAuth);
+      } catch (e) {
+        sessionStorage.removeItem('auth');
+        return { isLoggedIn: false, role: null, isProfileComplete: false, userId: null, name: null, email: null };
+      }
+    }
+    return { isLoggedIn: false, role: null, isProfileComplete: false, userId: null, name: null, email: null };
+  });
+
+  // Effect to sync state changes to sessionStorage
+  useEffect(() => {
+    if (authState.isLoggedIn) {
+        sessionStorage.setItem('auth', JSON.stringify(authState));
+    } else {
+        sessionStorage.removeItem('auth');
+    }
+  }, [authState]);
+
+  // Function called on successful login/signup
+  const login = (data) => {
+    const newState = {
+      isLoggedIn: true,
+      role: data.role,
+      isProfileComplete: data.isProfileComplete,
+      userId: data.userId,
+      name: data.name,
+      email: data.email
+    };
+    setAuthState(newState);
+    // sessionStorage is handled by the useEffect above, but we can set it explicitly here too for immediacy if needed
+    sessionStorage.setItem('auth', JSON.stringify(newState));
+  };
+  
+  // Function to update the profile status after completion
+  const completeProfile = () => {
+      setAuthState(prev => {
+          const newState = { ...prev, isProfileComplete: true };
+          sessionStorage.setItem('auth', JSON.stringify(newState));
+          return newState;
+      });
+  };
+
+  const logout = () => {
+    const newState = { isLoggedIn: false, role: null, isProfileComplete: false, userId: null, name: null, email: null };
+    setAuthState(newState);
+    sessionStorage.removeItem('auth');
+  };
+
+  const value = {
+    ...authState,
+    login,
+    logout,
+    completeProfile,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\BusinessDashboard.jsx
+// ==============================
+// ==============================
+// FILE: client/src/pages/BusinessDashboard.jsx
+// ==============================
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import Navbar from "../components/navbar";
+import "../styles/businessDashboard.css";
+import API_BASE_URL from "../apiConfig";
+
+const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
+const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
+const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
+const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`; 
+const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`; 
+const DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
+export default function BusinessDashboard() {
+  const { userId, role } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [business, setBusiness] = useState({ name: "", tag: "", description: "", owner: "", email: "", phone: "", website: "", logo: "", cover: "" });
+  const [posts, setPosts] = useState([]); 
+  const [newPost, setNewPost] = useState({ img: "", header: "", caption: "" });
+
+  const getImgUrl = (path) => {
+    if (!path) return DEFAULT_LOGO;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}${path}`;
+  };
+
+  useEffect(() => { 
+    AOS.init({ duration: 900, once: true }); 
+    if (userId) {
+        fetch(PROFILE_FETCH_URL(userId))
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const user = data.user;
+                    const biz = user.businessProfile || {};
+                    setBusiness({
+                        name: biz.brandName || user.name || "Brand Name",
+                        tag: `${biz.industry || 'Industry'} • ${biz.location || 'Location'}`,
+                        description: biz.targetAudience ? `Targeting: ${biz.targetAudience}` : "No description added yet.",
+                        owner: biz.ownerName || user.name,
+                        email: user.email,
+                        phone: biz.phoneNumber || "",
+                        website: biz.websiteUrl || "",
+                        logo: biz.logoUrl || DEFAULT_LOGO, 
+                        cover: biz.coverUrl || "https://via.placeholder.com/1200x350", 
+                    });
+                }
+            })
+            .catch(err => console.error(err));
+        fetch(USER_POSTS_URL(userId))
+            .then(res => res.json())
+            .then(data => { if(data.success) setPosts(data.posts); })
+            .catch(err => console.error(err))
+            .finally(() => setIsLoading(false));
+    }
+  }, [userId]);
+
+  // --- FIX: Refresh AOS ---
+  useEffect(() => {
+      setTimeout(() => AOS.refresh(), 500);
+  }, [posts, business, editing]);
+
+  const handleImageUpload = async (e, fieldName) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: objectUrl }));
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('userId', userId);
+    formData.append('role', role);
+    formData.append('fieldName', fieldName);
+    fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => { if(data.success) setBusiness(prev => ({ ...prev, [fieldName === 'logoUrl' ? 'logo' : 'cover']: data.fileUrl })); });
+  };
+
+  const handleRemoveLogo = () => { if(window.confirm("Remove logo?")) setBusiness(prev => ({ ...prev, logo: DEFAULT_LOGO })); };
+
+  const handleNewPostImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('userId', userId);
+    formData.append('role', role);
+    formData.append('fieldName', 'temp_post');
+    fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => { if(data.success) setNewPost({ ...newPost, img: data.fileUrl }); });
+  };
+
+  const addPost = async () => {
+    if (!newPost.img) return alert("Upload image first.");
+    try {
+        const res = await fetch(CREATE_POST_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, role, header: newPost.header, caption: newPost.caption, image: newPost.img })
+        });
+        const data = await res.json();
+        if (data.success) {
+            setPosts([data.post, ...posts]);
+            setNewPost({ img: "", header: "", caption: "" });
+            setShowPostForm(false);
+        }
+    } catch (err) { console.error(err); }
+  };
+
+  const saveProfile = async () => {
+      setEditing(false);
+      const logoToSend = business.logo === DEFAULT_LOGO ? "" : business.logo;
+      try {
+          await fetch(PROFILE_UPDATE_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, role, profileData: {
+                  brandName: business.name, ownerName: business.owner, phoneNumber: business.phone,
+                  websiteUrl: business.website, logoUrl: logoToSend, coverUrl: business.cover,
+              }})
+          });
+      } catch (err) { console.error(err); }
+  };
+
+  if (isLoading) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>Loading...</div>;
+
+  return (
+    <>
+      <Navbar />
+      <div className="bizdash-wrapper">
+        <div className="bizdash-header-container" data-aos="fade-down">
+          <div className="bizdash-cover" style={{ backgroundImage: `url(${getImgUrl(business.cover)})` }}>
+            {editing && <label className="edit-cover-btn">Change Cover <input type="file" hidden onChange={(e) => handleImageUpload(e, 'coverUrl')} /></label>}
+          </div>
+          <div className="bizdash-profile-bar">
+             <div className="logo-wrapper">
+              <img src={getImgUrl(business.logo)} className="bizdash-logo" alt="logo" />
+              {editing && (
+                 <div className="logo-edit-actions">
+                    <label className="logo-action-btn edit">✎ <input type="file" hidden onChange={(e) => handleImageUpload(e, 'logoUrl')} /></label>
+                    <button className="logo-action-btn remove" onClick={handleRemoveLogo}>✕</button>
+                 </div>
+              )}
+            </div>
+            <div className="profile-text">
+              {editing ? (
+                <>
+                  <input className="edit-mode-input" style={{fontSize: '1.8rem', fontWeight: 'bold'}} value={business.name} onChange={(e) => setBusiness({ ...business, name: e.target.value })} placeholder="Brand Name" />
+                  <input className="edit-mode-input" value={business.tag} onChange={(e) => setBusiness({ ...business, tag: e.target.value })} placeholder="Industry • Location" />
+                </>
+               ) : (
+                <><h2>{business.name}</h2><p>{business.tag}</p></>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="bizdash-content">
+          <aside className="biz-details-card glass-panel" data-aos="fade-right">
+             <h4>About Business</h4>
+            {editing ? (
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                <input className="edit-mode-input" placeholder="Owner" value={business.owner} onChange={(e) => setBusiness({ ...business, owner: e.target.value })} />
+                <input className="edit-mode-input" placeholder="Phone" value={business.phone} onChange={(e) => setBusiness({ ...business, phone: e.target.value })} />
+                <input className="edit-mode-input" placeholder="Website" value={business.website} onChange={(e) => setBusiness({ ...business, website: e.target.value })} />
+                <textarea rows="5" placeholder="Description" value={business.description} onChange={(e) => setBusiness({ ...business, description: e.target.value })} />
+              </div>
+            ) : (
+              <>
+                <div className="detail-row"><strong>Owner</strong> {business.owner}</div>
+                <div className="detail-row"><strong>Contact</strong> {business.phone || "N/A"}</div>
+                <div className="detail-row"><strong>Website</strong> <a href={business.website} target="_blank" rel="noreferrer" style={{color: 'var(--accent)'}}>{business.website || "N/A"}</a></div>
+                <div className="detail-bio">{business.description}</div>
+              </>
+            )}
+          </aside>
+          <main className="biz-posts-area" data-aos="fade-left">
+            <h3>Recent Campaigns</h3>
+            <div className="masonry-container"> 
+              <div className="masonry-item" onClick={() => setShowPostForm(true)}>
+                 <div className="new-post-btn">
+                    <span style={{fontSize: '3rem', fontWeight: '200', lineHeight:'1', marginBottom:'15px'}}>+</span>
+                    <span style={{fontWeight:'600', letterSpacing:'1px'}}>CREATE POST</span>
+                 </div>
+              </div>
+              {posts.map((p, i) => (
+                <div className="masonry-item post-card glass-card" key={i}>
+                  <img src={getImgUrl(p.image)} alt="post" />
+                  <div className="post-overlay">
+                     <h5 style={{color:'white', margin:'0 0 5px 0'}}>{p.header}</h5>
+                     <small style={{color:'#e2e8f0'}}>{p.caption}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
+        <button className="fab-edit" onClick={() => editing ? saveProfile() : setEditing(true)}>{editing ? "✓" : "✎"}</button>
+        
+        {showPostForm && (
+          <div className="post-form-overlay" onClick={() => setShowPostForm(false)}>
+            <div className="post-form-container glass-panel" onClick={e => e.stopPropagation()}>
+               <h3 style={{marginBottom:'20px', color:'white'}}>Create New Post</h3>
+               
+               <div className="file-upload-wrapper">
+                   <input type="file" accept="image/*" id="biz-post-upload" hidden onChange={handleNewPostImage} />
+                   <label htmlFor="biz-post-upload" className="file-upload-label">
+                       {newPost.img ? (
+                           <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" />
+                       ) : (
+                           <div className="upload-placeholder">
+                               <span style={{fontSize:'2rem'}}>📁</span>
+                               <span>Click to Upload Image</span>
+                           </div>
+                       )}
+                   </label>
+               </div>
+
+               <input className="edit-mode-input" placeholder="Header" value={newPost.header} onChange={e => setNewPost({...newPost, header: e.target.value})} />
+               <input className="edit-mode-input" placeholder="Caption" value={newPost.caption} onChange={e => setNewPost({...newPost, caption: e.target.value})} />
+               <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
+                  <button className="btn-primary" style={{flex:1}} onClick={addPost}>Post</button>
+                  <button className="btn-primary" style={{flex:1, background:'transparent', border:'1px solid white'}} onClick={() => setShowPostForm(false)}>Cancel</button>
+               </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\home.jsx
+// ==============================
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\home.jsx
+// ==============================
+import React, { useEffect } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "./home.css";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import Navbar from "../components/navbar";
+import SignupModal from "../components/signupModal";
+import LoginModal from "../components/loginModal";
+import Contact from "../components/contact"; 
+// ADDED IMPORT
+import Services from "../components/services";
+
+// Import your images
+const img1 = "assets/images/undefined (1).jpeg";
+const img2 = "assets/images/undefined (3).jpeg";
+const img3 = "assets/images/Photo colorful assortment of gents tshir….jpeg";
+const img4 = "assets/images/Animation professionnelle de vos comptes….jpeg";
+const img5 = "assets/images/Free photo influencer marketing collage _ Free….jpeg";
+
+const Home = () => {
+  useEffect(() => { AOS.init({ duration: 1000 }); }, []);
+
+  return (
+    <>
+      <Navbar />
+      
+      <div className="home-wrapper" id="home">
+        {/* Glow Effects */}
+        <div className="glow-blob blob-top"></div>
+        <div className="glow-blob blob-mid"></div>
+        <div className="glow-blob blob-bot"></div>
+
+        {/* --- HERO SECTION --- */}
+        <section className="hero-container">
+          <div className="hero-content" data-aos="fade-up">
+            <div className="hero-badge">The Future of Collabs</div>
+            <h1 className="hero-title">
+              Connect. Collaborate. <br />
+              <span>Create Impact.</span>
+            </h1>
+            <p className="hero-subtitle">
+              adNova bridges the gap between ambitious brands and creative influencers. 
+              The verified marketplace for secure, transparent growth.
+            </p>
+            <div className="hero-buttons">
+              <button className="btn btn-glow" data-bs-toggle="modal" data-bs-target="#signupModal">
+                Get Started Free
+              </button>
+              <a href="#showcase" className="btn btn-outline">
+                See How It Works
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* --- VISUAL SHOWCASE --- */}
+        <section className="section-wrapper" id="showcase">
+          <div className="section-header" data-aos="fade-up">
+            <h2>Real Results, Real People</h2>
+            <p>From fashion to tech, find your perfect match.</p>
+          </div>
+
+          <div className="bento-grid">
+            {/* Text Tile */}
+            <div className="bento-card text-card" data-aos="fade-right">
+              <div className="bento-icon">🚀</div>
+              <h4>Instant Matching</h4>
+              <p>Our algorithm finds partners based on niche, location, and budget instantly.</p>
+            </div>
+
+            {/* Image Tile (Large) */}
+            <div className="bento-card image-card large" data-aos="fade-up" style={{backgroundImage: `url('${img5}')`}}>
+              <div className="card-overlay">
+                <h4>Verified Creators</h4>
+                <span>Authentic engagement only.</span>
+              </div>
+            </div>
+
+            {/* Text Tile */}
+            <div className="bento-card text-card" data-aos="fade-left">
+              <div className="bento-icon">💬</div>
+              <h4>Secure Chat</h4>
+              <p>Negotiate deals safely with our encrypted real-time messaging.</p>
+            </div>
+
+            {/* Image Tile */}
+            <div className="bento-card image-card" data-aos="fade-up" style={{backgroundImage: `url('${img1}')`}}>
+               <div className="card-overlay"><h4>Brand Growth</h4></div>
+            </div>
+
+            {/* Image Tile */}
+            <div className="bento-card image-card" data-aos="fade-up" style={{backgroundImage: `url('${img3}')`}}>
+               <div className="card-overlay"><h4>Product Showcases</h4></div>
+            </div>
+
+            {/* Text Tile */}
+            <div className="bento-card text-card" data-aos="fade-up">
+              <div className="bento-icon">🌍</div>
+              <h4>Global Reach</h4>
+              <p>Connect locally or across the globe.</p>
+            </div>
+
+          </div>
+        </section>
+        
+        {/* --- ADDED SERVICES COMPONENT --- */}
+        <Services />
+
+        {/* --- SPLIT SECTION (Biz vs Inf) --- */}
+        <section className="dual-section" id="about">
+          <div className="split-panel left" data-aos="fade-right">
+            <span className="role-tag">For Businesses</span>
+            <h3>Expand Your Reach</h3>
+            <p>Stop wasting money on blind ads. Partner with creators who speak directly to your target audience.</p>
+            <div className="panel-img-preview" style={{backgroundImage: `url('${img2}')`}}></div>
+            <button className="btn btn-outline mt-4" data-bs-toggle="modal" data-bs-target="#signupModal">Join as Business</button>
+          </div>
+          
+          <div className="split-panel right" data-aos="fade-left">
+            <span className="role-tag">For Influencers</span>
+            <h3>Monetize Your Passion</h3>
+            <p>Find brands that align with your values. Secure sponsorships and grow your professional portfolio.</p>
+            <div className="panel-img-preview" style={{backgroundImage: `url('${img4}')`}}></div>
+            <button className="btn btn-outline mt-4" data-bs-toggle="modal" data-bs-target="#signupModal">Join as Creator</button>
+          </div>
+        </section>
+
+        <Contact />
+      </div>
+
+      <SignupModal />
+      <LoginModal />
+    </>
+  );
+};
+
+export default Home;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\HomeFeed.jsx
+// ==============================
+import React, { useEffect, useState } from 'react';
+
+export default function HomeFeed() {
+  const role = localStorage.getItem('userRole') || 'guest';
+  const [items, setItems] = useState([]);
+  useEffect(()=>{
+    if (role === 'business') {
+      setItems([{id:1,title:'Influencer post #1',desc:'Food influencer — Chennai'}]);
+    } else if (role === 'influencer') {
+      setItems([{id:1,title:'Business post #1',desc:'Looking for fitness influencers — Mumbai'}]);
+    } else {
+      setItems([{id:1,title:'Please login',desc:'You must login to see your feed.'}]);
+    }
+  },[role]);
+  return (
+    <div className='container'>
+      <h2>Home Feed ({role})</h2>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:12}}>
+        {items.map(it=>(
+          <div key={it.id} style={{background:'#08102a',padding:12,borderRadius:8}}>
+            <h4>{it.title}</h4>
+            <p>{it.desc}</p>
+            <button className='btn btn-sm btn-primary'>{role==='business'?'Contact':'Apply'}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\InfluencerDashboard.jsx
+// ==============================
+// ==============================
+// FILE: client/src/pages/InfluencerDashboard.jsx
+// ==============================
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import Navbar from '../components/navbar';
+import "../styles/InfluencerDashboard.css";
+import API_BASE_URL from "../apiConfig";
+
+const PROFILE_FETCH_URL = (userId) => `${API_BASE_URL}/api/auth/profile/${userId}`;
+const PROFILE_UPDATE_URL = `${API_BASE_URL}/api/auth/update-profile`;
+const UPLOAD_API_URL = `${API_BASE_URL}/api/auth/upload-image`;
+const CREATE_POST_URL = `${API_BASE_URL}/api/posts/create`;
+const USER_POSTS_URL = (userId) => `${API_BASE_URL}/api/posts/user/${userId}`;
+const REFRESH_STATS_URL = `${API_BASE_URL}/api/auth/refresh-socials`;
+
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+const COMMON_NICHES = [
+    "Fashion", "Beauty", "Tech", "Gaming", "Travel", "Food", 
+    "Fitness", "Health", "Lifestyle", "Parenting", "Business", 
+    "Finance", "Education", "Entertainment", "Music", "Art"
+];
+export default function InfluencerDashboard() {
+    const { userId, role } = useAuth();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [showPostForm, setShowPostForm] = useState(false);
+    const [profile, setProfile] = useState({
+        name: '', niche: '', niches: [], location: '', bio: '', followers: 0, pfp: '', rateCard: '', instagramHandle: '', youtubeHandle: ''
+    });
+    const [posts, setPosts] = useState([]);
+    const [newPost, setNewPost] = useState({ img: '', header: '', caption: '' });
+    const [customNiche, setCustomNiche] = useState(""); 
+
+    const formatCompactNumber = (number) => {
+        const num = Number(number);
+        if (isNaN(num)) return "0";
+        return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
+    };
+    const getImgUrl = (path) => {
+        if (!path) return DEFAULT_PFP;
+        if (path.startsWith('http')) return path;
+        return `${API_BASE_URL}${path}`;
+    };
+
+    // --- INITIAL DATA FETCH & AOS SETUP ---
+    useEffect(() => {
+        // Initialize AOS with a slight delay to ensure DOM is ready
+        AOS.init({ duration: 900, once: true }); 
+        
+        if (userId) {
+            fetch(PROFILE_FETCH_URL(userId))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+                        const inf = user.influencerProfile || {};
+                        setProfile({
+                            name: inf.displayName || user.name || "Influencer Name",
+                            niche: inf.niche || "Content Creator",
+                            niches: inf.niches || [], 
+                            location: inf.location || "Location", 
+                            bio: inf.bio || "No bio added yet.", 
+                            followers: inf.followerCount || 0,
+                            pfp: inf.pfp || DEFAULT_PFP,
+                            rateCard: inf.rateCard || '',
+                            instagramHandle: inf.instagramHandle || '',
+                            youtubeHandle: inf.youtubeHandle || ''
+                        });
+                    }
+                })
+                .catch(err => console.error(err));
+            fetch(USER_POSTS_URL(userId))
+                .then(res => res.json())
+                .then(data => { if(data.success) setPosts(data.posts); })
+                .catch(err => console.error(err))
+                .finally(() => setIsLoading(false));
+        }
+    }, [userId]);
+
+    // --- FIX: Refresh AOS when data changes (Prevents invisible content on refresh) ---
+    useEffect(() => {
+        setTimeout(() => {
+            AOS.refresh();
+        }, 500); // Small delay to allow React to render elements
+    }, [profile, posts, editMode]);
+
+    const toggleNiche = (nicheToAdd) => {
+        setProfile(prev => {
+            const exists = prev.niches.includes(nicheToAdd);
+            let newNiches;
+            if (exists) {
+                newNiches = prev.niches.filter(n => n !== nicheToAdd);
+            } else {
+                if (prev.niches.length >= 5) return prev; 
+                newNiches = [...prev.niches, nicheToAdd];
+            }
+            return { ...prev, niches: newNiches };
+        });
+    };
+
+    const addCustomNiche = (e) => {
+        e.preventDefault();
+        if (customNiche && !profile.niches.includes(customNiche)) {
+            if (profile.niches.length >= 5) return alert("Max 5 niches allowed.");
+            setProfile(prev => ({ ...prev, niches: [...prev.niches, customNiche] }));
+            setCustomNiche("");
+        }
+    };
+
+    const handleRefreshStats = async () => {
+        setIsRefreshing(true);
+        try {
+            const res = await fetch(REFRESH_STATS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setProfile(prev => ({ ...prev, followers: data.count }));
+                alert(`Stats Updated: ${formatCompactNumber(data.count)}`);
+            } else {
+                alert(data.message);
+            }
+        } catch (err) { console.error(err);
+        } finally { setIsRefreshing(false);
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setProfile(p => ({...p, pfp: URL.createObjectURL(file)}));
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('userId', userId);
+        formData.append('role', role);
+        formData.append('fieldName', 'pfp');
+        fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => { if(data.success) setProfile(p => ({...p, pfp: data.fileUrl })); });
+    };
+
+    const handleNewPostImage = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('userId', userId);
+        formData.append('role', role);
+        formData.append('fieldName', 'temp_post');
+        fetch(UPLOAD_API_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => { if(data.success) setNewPost({ ...newPost, img: data.fileUrl }); });
+    };
+    
+    const addPost = async () => {
+        if (!newPost.img) return alert("Please upload an image.");
+        try {
+            const res = await fetch(CREATE_POST_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, role, header: newPost.header, caption: newPost.caption, image: newPost.img })
+            });
+            const data = await res.json();
+            if(data.success) {
+                setPosts([data.post, ...posts]);
+                setNewPost({ img:'', header:'', caption:''});
+                setShowPostForm(false);
+            }
+        } catch(err) { console.error(err);
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        setEditMode(false);
+        const pfpToSend = profile.pfp === DEFAULT_PFP ? "" : profile.pfp;
+        try {
+            await fetch(PROFILE_UPDATE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, role, profileData: {
+                    displayName: profile.name, 
+                    niche: profile.niches[0] || "",
+                    niches: profile.niches,
+                    location: profile.location, 
+                    bio: profile.bio, 
+                    pfp: pfpToSend,
+                    instagramHandle: profile.instagramHandle,
+                    youtubeHandle: profile.youtubeHandle
+                }}),
+            });
+            if(profile.instagramHandle || profile.youtubeHandle) handleRefreshStats();
+        } catch (error) { console.error(error); }
+    };
+    if (isLoading) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>Loading...</div>;
+
+    return (
+        <>
+            <Navbar />
+            <div className='inf-wrapper'>
+                <div className='inf-container'>
+                    {/* Added key={editMode} to force re-render on mode switch which helps AOS */}
+                    <aside className='inf-sidebar glass-panel' data-aos="fade-right" key={`sidebar-${editMode}`}>
+                        <div className='pfp-container'>
+                            <div className='pfp-circle' style={{backgroundImage:`url(${getImgUrl(profile.pfp)})`}}>
+                                {editMode && (
+                                    <label className='pfp-edit-overlay'>✎ <input type='file' hidden onChange={handleImageUpload} /></label>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className='inf-info'>
+                            {editMode ? (
+                                <>
+                                    <input className='edit-input' value={profile.name} onChange={(e) => setProfile(p => ({...p, name: e.target.value}))} placeholder="Name" />
+                                    <input className='edit-input' value={profile.location} onChange={(e) => setProfile(p => ({...p, location: e.target.value}))} placeholder="Location" />
+                                    
+                                    {/* --- EDIT NICHES UI (FIXED COLORS) --- */}
+                                    <div style={{textAlign: 'left', marginBottom: '15px'}}>
+                                        <label style={{fontSize:'0.8rem', color:'#94a3b8', display:'block', marginBottom:'5px'}}>Niches (Max 5)</label>
+                                        <div style={{display:'flex', flexWrap:'wrap', gap:'5px', marginBottom:'10px'}}>
+                                            {COMMON_NICHES.map(n => (
+                                                <span 
+                                                    key={n} 
+                                                    onClick={() => toggleNiche(n)}
+                                                    style={{
+                                                        fontSize:'0.75rem', 
+                                                        padding:'4px 8px', 
+                                                        borderRadius:'12px', 
+                                                        cursor:'pointer',
+                                                        // FIX: Use Dark BG for unselected to support White text
+                                                        background: profile.niches.includes(n) ? '#6366F1' : 'rgba(255,255,255,0.05)',
+                                                        color: 'white', // Always white
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        fontWeight: '600'
+                                                    }}
+                                                >
+                                                    {n}
+                                                </span>
+                                            ))}
+                                            {profile.niches.filter(n => !COMMON_NICHES.includes(n)).map(n => (
+                                                 <span 
+                                                 key={n} 
+                                                 onClick={() => toggleNiche(n)}
+                                                 style={{
+                                                     fontSize:'0.75rem', 
+                                                     padding:'4px 8px', 
+                                                     borderRadius:'12px', 
+                                                     cursor:'pointer',
+                                                     background: '#6366F1',
+                                                     color: 'white',
+                                                     border: '1px solid rgba(255,255,255,0.1)'
+                                                 }}
+                                             >
+                                                 {n} ✕
+                                             </span>
+                                            ))}
+                                        </div>
+                                        <div style={{display:'flex', gap:'5px'}}>
+                                            <input 
+                                                className='edit-input' 
+                                                style={{marginBottom:0, fontSize:'0.8rem'}} 
+                                                placeholder="Add custom niche..." 
+                                                value={customNiche} 
+                                                onChange={e => setCustomNiche(e.target.value)}
+                                            />
+                                            <button type='button' className='btn-primary' style={{padding:'5px 10px', fontSize:'0.8rem'}} onClick={addCustomNiche}>Add</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <textarea className='edit-textarea' value={profile.bio} onChange={(e) => setProfile(p => ({...p, bio: e.target.value}))} placeholder="Bio" />
+                                    
+                                    <div style={{marginTop:'15px', borderTop:'1px solid rgba(255,255,255,0.1)', paddingTop:'10px'}}>
+                                        <label style={{fontSize:'0.8rem', color:'#94a3b8', display:'block', marginBottom:'5px'}}>Social Handles (No @)</label>
+                                        <input className='edit-input' value={profile.instagramHandle} onChange={(e) => setProfile(p => ({...p, instagramHandle: e.target.value}))} placeholder="Instagram" />
+                                        <input className='edit-input' value={profile.youtubeHandle} onChange={(e) => setProfile(p => ({...p, youtubeHandle: e.target.value}))} placeholder="YouTube" />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className='inf-name'>{profile.name}</h2>
+                                    <p className='inf-location'>📍 {profile.location}</p>
+                                   
+                                    <div style={{display:'flex', flexWrap:'wrap', gap:'8px', justifyContent:'center', marginBottom:'20px'}}>
+                                        {profile.niches && profile.niches.length > 0 ? (
+                                            profile.niches.map((n, i) => (
+                                                <span key={i} className='inf-badge' style={{marginBottom:0}}>{n}</span>
+                                            ))
+                                        ) : (
+                                            <span className='inf-badge'>{profile.niche || "Content Creator"}</span>
+                                        )}
+                                    </div>
+
+                                    <p className='inf-bio'>{profile.bio}</p>
+
+                                    {(profile.instagramHandle || profile.youtubeHandle) && (
+                                        <div style={{textAlign:'center', marginTop:'15px'}}>
+                                            <span className="social-label">Verified Sources</span>
+                                            <div className="connected-socials">
+                                                {profile.instagramHandle && (
+                                                    <a href={`https://instagram.com/${profile.instagramHandle}`} target="_blank" rel="noreferrer" className="social-badge insta">
+                                                        <i className="fa-brands fa-instagram"></i> @{profile.instagramHandle}
+                                                    </a>
+                                                )}
+                                                {profile.youtubeHandle && (
+                                                    <a href={`https://youtube.com/@${profile.youtubeHandle}`} target="_blank" rel="noreferrer" className="social-badge yt">
+                                                        <i className="fa-brands fa-youtube"></i> @{profile.youtubeHandle}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                        
+                        <div className='inf-stats'>
+                            <div className='stat-box'>
+                                <div className='stat-num-row'>
+                                    <span className='stat-num'>{formatCompactNumber(profile.followers)}</span>
+                                    <button className={`sync-btn ${isRefreshing ? 'spinning' : ''}`} onClick={handleRefreshStats} title="Sync Followers" disabled={isRefreshing}>↻</button>
+                                </div>
+                                <div className='stat-label'>Total Reach</div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <main className='inf-content' data-aos="fade-left">
+                        <h3 className='section-title'>My Content Portfolio</h3>
+                        <div className='masonry-container'>
+                            <div className='masonry-item' style={{display:'inline-block', width:'100%'}}>
+                                <div className='new-post-tile' onClick={()=>setShowPostForm(true)}>
+                                    <div className='plus-icon'>+</div><div>Add New Content</div>
+                                </div>
+                            </div>
+                            {posts.map((p,i)=>(
+                                <div className='masonry-item post-card glass-card' key={i}>
+                                    <img src={getImgUrl(p.image)} alt={p.header} />
+                                    <div className='post-overlay'>
+                                        <h5 style={{color:'white', margin:0}}>{p.header}</h5>
+                                        <small style={{color:'#e2e8f0'}}>{p.caption}</small>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+
+                {showPostForm && (
+                    <div className='post-form-overlay' onClick={()=>setShowPostForm(false)}>
+                        <div className='post-form-container glass-panel' onClick={(e)=>e.stopPropagation()}>
+                            <h3 style={{marginBottom:'20px', color:'white'}}>Add to Portfolio</h3>
+                            <div className="file-upload-wrapper">
+                                <input type="file" accept="image/*" id="inf-post-upload" hidden onChange={handleNewPostImage} />
+                                <label htmlFor="inf-post-upload" className="file-upload-label">
+                                    {newPost.img ? (
+                                        <img src={getImgUrl(newPost.img)} className="preview-img" alt="preview" />
+                                    ) : (
+                                        <div className="upload-placeholder">
+                                            <span style={{fontSize:'2rem'}}>📁</span><span>Click to Upload Image</span>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+                            <input className='edit-input' placeholder='Title' value={newPost.header} onChange={(e)=>setNewPost({...newPost, header:e.target.value})} />
+                            <input className='edit-input' placeholder='Description' value={newPost.caption} onChange={(e)=>setNewPost({...newPost, caption:e.target.value})} />
+                            <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
+                                <button className='btn-primary' style={{flex:1}} onClick={addPost}>Post</button>
+                                <button className='btn-primary' style={{flex:1, background:'transparent', border:'1px solid white'}} onClick={()=>setShowPostForm(false)}>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <button className='fab-edit' onClick={() => { if(editMode) handleSaveProfile();
+                else setEditMode(true); }}>{editMode ? "✓" : "✎"}</button>
+            </div>
+        </>
+    );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\MarketPlace.jsx
+// ==============================
+// ==============================
+// FILE: client/src/pages/MarketPlace.jsx
+// ==============================
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import AOS from "aos"; 
+import "aos/dist/aos.css"; 
+import Navbar from "../components/navbar";
+import "../styles/businessDashboard.css"; 
+import API_BASE_URL from "../apiConfig"; 
+
+const DEFAULT_PLACEHOLDER = "https://via.placeholder.com/400x300?text=No+Image";
+const DEFAULT_AVATAR = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
+const COMMON_NICHES = [ "Fashion", "Beauty", "Tech", "Gaming", "Travel", "Food", "Fitness", "Health", "Lifestyle", "Parenting", "Business", "Entertainment" ];
+
+export default function Marketplace() {
+  const { userId, role } = useAuth(); 
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchName, setSearchName] = useState("");
+  const [searchLoc, setSearchLoc] = useState("");
+  const [searchNiche, setSearchNiche] = useState("");
+  const [searchReach, setSearchReach] = useState("0");
+  const [userLocation, setUserLocation] = useState("");
+
+  const getImgUrl = (path) => {
+      if (!path || path === "undefined") return DEFAULT_PLACEHOLDER;
+      if (path.startsWith("http")) return path; 
+      return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const getAvatarUrl = (path) => {
+      if (!path || path === "undefined") return DEFAULT_AVATAR;
+      if (path.startsWith("http")) return path;
+      return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const fetchPosts = async () => {
+      setLoading(true);
+      try {
+          const params = new URLSearchParams();
+          if (userId) params.append("userId", userId);
+          params.append("viewerRole", role);
+          if (userLocation) params.append("userLocation", userLocation); 
+          if (searchName) params.append("search", searchName);
+          if (searchLoc) params.append("location", searchLoc);
+          if (searchNiche) params.append("niche", searchNiche);
+          if (searchReach !== "0") params.append("minReach", searchReach);
+
+          const res = await fetch(`${API_BASE_URL}/api/posts/feed?${params.toString()}`);
+          const data = await res.json();
+          if (data.success) setPosts(data.posts);
+          else setPosts([]); 
+      } catch (err) { console.error(err); } finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    AOS.init({ duration: 800, once: true });
+    
+    const init = async () => {
+        if(userId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/profile/${userId}`);
+                const data = await res.json();
+                if(data.success) {
+                    const loc = role === 'business' ? data.user.businessProfile?.location : data.user.influencerProfile?.location;
+                    setUserLocation(loc || "");
+                }
+            } catch(e) {}
+        }
+        fetchPosts();
+    };
+    init();
+  }, [userId, role]);
+
+  // --- FIX: Refresh Animations when posts load ---
+  useEffect(() => {
+      setTimeout(() => AOS.refresh(), 500);
+  }, [posts]);
+
+  const handleSearch = (e) => { e.preventDefault(); fetchPosts(); };
+
+  return (
+    <>
+      <Navbar />
+      <div className="bizdash-wrapper">
+        <div className="container" style={{maxWidth: '1200px', marginTop: '40px'}}>
+          <div className="text-center mb-5 text-white" data-aos="fade-down">
+            <h2 className="fw-bold display-5">Explore {role === 'business' ? 'Creators' : 'Opportunities'}</h2>
+            <p className="lead" style={{color:'#cbd5e1'}}>Find your perfect match.</p>
+          </div>
+
+          <form className="search-bar-container" onSubmit={handleSearch} data-aos="fade-up">
+              
+              <div className="search-group">
+                <i className="fa-solid fa-magnifying-glass search-icon"></i>
+                <input className="search-input-clean" placeholder="Search Name..." value={searchName} onChange={(e) => setSearchName(e.target.value)} />
+              </div>
+
+              <div className="search-divider"></div>
+
+              <div className="search-group">
+                <i className="fa-solid fa-location-dot search-icon"></i>
+                <input className="search-input-clean" placeholder="Location..." value={searchLoc} onChange={(e) => setSearchLoc(e.target.value)} />
+              </div>
+
+              <div className="search-divider"></div>
+
+              <div className="search-group">
+                <i className="fa-solid fa-hashtag search-icon"></i>
+                <select className="search-select-clean" value={searchNiche} onChange={(e) => setSearchNiche(e.target.value)}>
+                  <option value="">All Niches</option>
+                  {COMMON_NICHES.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+
+              {role === 'business' && (
+                  <>
+                    <div className="search-divider"></div>
+                    <div className="search-group">
+                        <i className="fa-solid fa-users search-icon"></i>
+                        <select className="search-select-clean" value={searchReach} onChange={(e) => setSearchReach(e.target.value)}>
+                            <option value="0">Any Reach</option>
+                            <option value="1000">1K+ Followers</option>
+                            <option value="10000">10K+ Followers</option>
+                            <option value="100000">100K+ Followers</option>
+                            <option value="1000000">1M+ Followers</option>
+                        </select>
+                    </div>
+                  </>
+              )}
+              
+              <button type="submit" className="search-btn-round">
+                Search
+              </button>
+          </form>
+
+          {loading ?
+             <div className="text-white text-center mt-5">Loading Feed...</div> : (
+             <div className="masonry-container">
+                {posts.map((post) => (
+                  <div key={post._id} className="masonry-item post-card glass-card" style={{cursor: 'pointer'}} onClick={() => navigate(`/profile/${post.authorId}`)} data-aos="fade-up">
+                    <img src={getImgUrl(post.image)} alt={post.header} className="post-main-img" onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_PLACEHOLDER; }} />
+                    <div className="post-overlay">
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                         <img src={getAvatarUrl(post.authorImage)} alt="author" style={{width: '30px', height: '30px', borderRadius: '50%', objectFit:'cover', border:'1px solid white'}} onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_AVATAR; }} />
+                         <div>
+                            <span style={{color: 'white', fontWeight: 'bold', fontSize: '0.9rem', display:'block', lineHeight:'1'}}>{post.authorName}</span>
+                            {post.authorLocation && <span style={{color: '#0dcaf0', fontSize: '0.7rem', display:'block'}}>{post.authorLocation}</span>}
+                         </div>
+                      </div>
+                      <h5 style={{color:'white', margin:0, fontSize: '1rem'}}>{post.header}</h5>
+                      
+                      {/* FIX: Explicitly setting description color to white/light gray */}
+                      <p style={{color: '#e2e8f0', fontSize: '0.85rem', margin: '5px 0 0 0', lineHeight: '1.4'}}>{post.caption}</p>
+
+                      {post.authorNiches && post.authorNiches.length > 0 && (
+                          <div style={{display:'flex', gap:'5px', marginTop:'5px', flexWrap:'wrap'}}>
+                              {post.authorNiches.slice(0, 2).map((n, i) => (
+                                  <span key={i} style={{fontSize:'0.65rem', background:'rgba(99,102,241,0.3)', padding:'2px 6px', borderRadius:'10px', color:'#c7d2fe'}}>{n}</span>
+                              ))}
+                          </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+             </div>
+          )}
+          {!loading && posts.length === 0 && <div className="text-center text-muted mt-5" style={{padding: "40px"}}><h4>No results found.</h4></div>}
+        </div>
+      </div>
+    </>
+  );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\Messages.jsx
+// ==============================
+// ==============================
+// FILE: client/src/pages/Messages.jsx
+// ==============================
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import io from "socket.io-client";
+import { useAuth } from "../contexts/AuthContext"; 
+import { useLocation, useNavigate } from "react-router-dom"; 
+import Navbar from "../components/navbar"; 
+import "./messages.css";
+import API_BASE_URL from "../apiConfig"; 
+
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
+const SimpleCrypto = {
+  encrypt: (text, key) => { try { return btoa(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join('')); } catch (e) { return text; } },
+  decrypt: (encoded, key) => { try { return atob(encoded).split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join(''); } catch (e) { return "**Error**"; } }
+};
+
+export default function Messages() {
+  const { name = "User", email = "", isLoggedIn, userId, role } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const socketRef = useRef();
+  const activeChatRef = useRef(null);
+
+  const [activeTab, setActiveTab] = useState("chats");
+  const [contacts, setContacts] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [currentChat, setCurrentChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [myImage, setMyImage] = useState(null);
+  const messagesEndRef = useRef(null);
+
+  const generateRoomId = (email1, email2) => [email1.toLowerCase(), email2.toLowerCase()].sort().join("_");
+
+  const getImgUrl = (path) => {
+      if (!path || path === "") return DEFAULT_PFP;
+      if (path.startsWith('http')) return path;
+      return `${API_BASE_URL}${path}`;
+  };
+
+  const handleImgError = (e) => {
+      e.target.onerror = null;
+      e.target.src = DEFAULT_PFP;
+  };
+
+  useEffect(() => {
+    activeChatRef.current = currentChat;
+  }, [currentChat]);
+
+  useEffect(() => {
+      if(userId) {
+          fetch(`${API_BASE_URL}/api/auth/profile/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const img = role === 'business' ? data.user.businessProfile?.logoUrl : data.user.influencerProfile?.pfp;
+                    setMyImage(img);
+                }
+            }).catch(console.error);
+      }
+  }, [userId, role]);
+
+  const updateContactToConnected = useCallback((data) => {
+     setContacts(prev => {
+         const newContact = {
+             id: data.conversationId || Date.now(), 
+             name: data.name, 
+             email: data.email,
+             image: data.image, 
+             role: "connected", 
+             lastMessage: "Conversation Started", 
+             time: "Now"
+         };
+         const filtered = prev.filter(c => c.email !== data.email);
+         return [newContact, ...filtered];
+     });
+     
+     if (activeChatRef.current && activeChatRef.current.email === data.email) {
+         setCurrentChat(prev => ({ ...prev, role: "connected" }));
+     }
+  }, []);
+
+  useEffect(() => {
+    if (location.state && location.state.initiateChat) {
+        const targetEmail = location.state.initiateChat.toLowerCase();
+        
+        if (contacts.length > 0) {
+            const existingContact = contacts.find(c => c.email.toLowerCase() === targetEmail);
+            if (existingContact) {
+                setCurrentChat(existingContact);
+                setActiveTab("chats");
+                setShowInviteForm(false);
+            } else {
+                setInviteEmail(targetEmail);
+                setShowInviteForm(true);
+            }
+            navigate(location.pathname, { replace: true, state: {} });
+        } else if (contacts.length === 0) {
+             setInviteEmail(targetEmail);
+             setShowInviteForm(true);
+        }
+    }
+  }, [location, contacts, navigate]);
+
+  useEffect(() => {
+    if (isLoggedIn && email) {
+      socketRef.current = io.connect(API_BASE_URL);
+      const socket = socketRef.current;
+
+      const myEmail = email.toLowerCase();
+      const register = () => socket.emit("register_user", myEmail);
+      register();
+
+      socket.on("connect", register);
+
+      socket.on("existing_requests", (data) => setRequests(data.map(r => ({ id: r._id, name: r.senderName, email: r.senderEmail, time: r.timestamp }))));
+      
+      socket.on("existing_conversations", (data) => setContacts(data.map(c => ({ ...c, role: "connected" }))));
+      
+      socket.on("receive_request", (data) => setRequests(prev => {
+          if (prev.some(r => r.email === data.email)) return prev;
+          return [{...data, id: data._id || data.id}, ...prev];
+      }));
+
+      socket.on("request_accepted", (data) => updateContactToConnected(data));
+      
+      socket.on("chat_history", (history) => {
+         const activeChat = activeChatRef.current;
+         if (activeChat) {
+             const roomId = generateRoomId(email, activeChat.email);
+             setMessages(history.map(msg => ({ ...msg, message: SimpleCrypto.decrypt(msg.message, roomId) })));
+         }
+      });
+
+      socket.on("receive_message", (data) => {
+        const activeChat = activeChatRef.current;
+        if (activeChat) {
+           const roomId = generateRoomId(email, activeChat.email);
+           
+           if (data.room === roomId) {
+              const text = SimpleCrypto.decrypt(data.message, roomId);
+              setMessages(prev => {
+                  if(prev.length > 0) {
+                      const last = prev[prev.length - 1];
+                      if(last.time === data.time && last.message === text) return prev;
+                  }
+                  return [...prev, { ...data, message: text }];
+              });
+           }
+        }
+      });
+
+      return () => {
+          socket.disconnect();
+      };
+    }
+  }, [isLoggedIn, email, updateContactToConnected]); 
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const sendInvite = (e) => {
+    e.preventDefault();
+    if (inviteEmail) {
+      const targetEmail = inviteEmail.toLowerCase();
+      if(targetEmail === email.toLowerCase()) return;
+      if(contacts.some(c => c.email === targetEmail) || requests.some(r => r.email === targetEmail)) return;
+      
+      socketRef.current.emit("send_request", { to: targetEmail, requestData: { name: name, email: email, time: "Now" } });
+      const pending = { id: "temp_" + Date.now(), name: targetEmail.split("@")[0], email: targetEmail, image: "", role: "pending", lastMessage: "Invite Sent", time: "Now" };
+      setContacts(prev => [pending, ...prev]);
+      setCurrentChat(pending);
+      setInviteEmail("");
+      setShowInviteForm(false);
+    }
+  };
+
+  const acceptRequest = (req) => {
+    socketRef.current.emit("accept_request", { requestId: req.id, acceptorName: name, acceptorEmail: email });
+    const newContact = { 
+        id: req.id, name: req.name, email: req.email, image: "", 
+        role: "connected", lastMessage: "Conversation Started", time: "Now" 
+    };
+    setContacts(prev => [newContact, ...prev]);
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+    setActiveTab("chats");
+    joinChat(newContact);
+  };
+
+  const joinChat = (contact) => {
+    setCurrentChat(contact);
+    setMessages([]); 
+    
+    if(socketRef.current) {
+        const roomId = generateRoomId(email, contact.email);
+        socketRef.current.emit("join_room", roomId);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (newMessage.trim() && currentChat && currentChat.role !== 'pending') {
+      const roomId = generateRoomId(email, currentChat.email);
+      const encrypted = SimpleCrypto.encrypt(newMessage, roomId);
+      
+      const payload = { 
+          room: roomId, 
+          author: name, 
+          message: encrypted, 
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+          participants: [email, currentChat.email] 
+      };
+
+      await socketRef.current.emit("send_message", payload);
+      setNewMessage("");
+    }
+  };
+
+  if (!isLoggedIn) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}><h2>Please log in.</h2></div>;
+
+  const safeName = name || "User";
+
+  return (
+    <>
+    <Navbar />
+    <div className="messaging-page">
+      <div className="messaging-container">
+        
+        <div className="msg-sidebar">
+          <div className="msg-header">
+            <div className="user-profile">
+               <img 
+                    src={getImgUrl(myImage)} 
+                    alt="Me" 
+                    className="avatar-img" 
+                    onError={handleImgError}
+                    style={{border:'2px solid var(--accent)'}} 
+                />
+              <div className="user-info"><h4>{safeName}</h4><span className="user-email">{email}</span></div>
+            </div>
+          </div>
+          <div className="sidebar-tabs">
+            <button className={`tab-btn ${activeTab === 'chats' ? 'active' : ''}`} onClick={() => setActiveTab('chats')}>Chats</button>
+            <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>Requests ({requests.length})</button>
+          </div>
+          
+          <div className="contact-list">
+            {activeTab === 'chats' && contacts.map(c => (
+              <div key={c.id} className={`contact-item ${currentChat?.email === c.email ? 'active' : ''}`} onClick={() => joinChat(c)}>
+                <img src={getImgUrl(c.image)} alt={c.name} className="avatar-img" onError={handleImgError} />
+                <div className="contact-details">
+                  <div className="contact-top">
+                      <span className="contact-name">{c.name || c.email}</span>
+                      {/* REMOVED TIME SPAN HERE */}
+                  </div>
+                  <p className="last-message">{c.role === 'pending' ? 'Pending Acceptance...' : c.lastMessage}</p>
+                </div>
+              </div>
+            ))}
+            {activeTab === 'requests' && requests.map(r => (
+              <div key={r.id} className="request-item">
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>{r.name || r.email}</span><span>{r.time}</span></div>
+                <div style={{fontSize:'0.8rem', color:'#aaa'}}>{r.email}</div>
+                <div className="request-actions">
+                  <button className="btn-accept" onClick={() => acceptRequest(r)}>Accept</button>
+                  <button className="btn-reject" onClick={() => setRequests(prev => prev.filter(x => x.id !== r.id))}>Reject</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="invite-section">
+            {!showInviteForm ?
+              <button className="invite-btn-main" onClick={() => setShowInviteForm(true)}>+ New Chat</button> :
+              <form onSubmit={sendInvite} className="invite-form">
+                <input type="email" placeholder="Email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} autoFocus />
+                <div className="invite-actions">
+                  <button type="submit" className="btn-accept">SEND</button>
+                  <button type="button" className="btn-reject" onClick={() => setShowInviteForm(false)}>CANCEL</button>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+
+        <div className="chat-area">
+          {currentChat ? (
+            <>
+              <div className="chat-header">
+                <div className="user-profile">
+                  <img src={getImgUrl(currentChat.image)} alt={currentChat.name} className="avatar-img" onError={handleImgError} />
+                  <div>
+                      <span className="contact-name">{currentChat.name || currentChat.email}</span> 
+                      <span className="chat-role-badge">
+                          {currentChat.role === 'pending' ? 'PENDING' : 'CONNECTED'}
+                      </span>
+                  </div>
+                </div>
+              </div>
+              <div className="messages-feed">
+                {messages.map((m, i) => (
+                  <div key={i} className={`message-wrapper ${m.author === name ? 'sent' : 'received'}`}>
+                    <div className="message-bubble">{m.message}<div className="msg-time">{m.time}</div></div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+              {currentChat.role === 'pending' ?
+                <div className="pending-notice">Waiting for acceptance...</div> :
+                <form className="chat-input-area" onSubmit={sendMessage}>
+                  <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." />
+                  <button className="send-btn">➤</button>
+                </form>
+              }
+            </>
+          ) : <div className="empty-chat"><h3>Select a chat</h3></div>}
+        </div>
+      </div>
+    </div>
+    </>
+  );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\PublicProfile.jsx
+// ==============================
+// ==============================
+// FILE: client/src/pages/PublicProfile.jsx
+// ==============================
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Navbar from "../components/navbar";
+import "../styles/businessDashboard.css"; 
+import "../styles/InfluencerDashboard.css"; 
+import API_BASE_URL from "../apiConfig";
+
+const DEFAULT_PFP = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg";
+
+export default function PublicProfile() {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const formatCompactNumber = (number) => {
+        const num = Number(number);
+        if (isNaN(num)) return "0";
+        return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
+  };
+
+  const getImgUrl = (path) => {
+    if (!path) return DEFAULT_PFP;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}${path}`;
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const userRes = await fetch(`${API_BASE_URL}/api/auth/profile/${userId}`);
+            const userData = await userRes.json();
+            const postsRes = await fetch(`${API_BASE_URL}/api/posts/user/${userId}`);
+            const postsData = await postsRes.json();
+
+            if (userData.success) setUser(userData.user);
+            if (postsData.success) setPosts(postsData.posts);
+        } catch (err) { console.error(err); } finally { setLoading(false); }
+    };
+    fetchData();
+  }, [userId]);
+
+  const handleMessage = () => {
+      if(user) navigate("/messages", { state: { initiateChat: user.email } });
+  };
+
+  if (loading) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>Loading...</div>;
+  if (!user) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'white'}}>User not found.</div>;
+
+  const isBiz = user.role === 'business';
+
+  // --- 1. INFLUENCER LAYOUT ---
+  if (!isBiz) {
+      const profile = user.influencerProfile || {};
+      return (
+        <>
+          <Navbar />
+          <div className="inf-wrapper">
+            <div className="inf-container">
+               <aside className="inf-sidebar">
+                  <div className="pfp-container">
+                    <div className="pfp-circle" style={{backgroundImage: `url(${getImgUrl(profile.pfp)})`}}></div>
+                  </div>
+                  <div className="inf-info">
+                      <h2 className="inf-name">{profile.displayName || user.name}</h2>
+                      <p className="inf-location">📍 {profile.location || "Global"}</p>
+                      
+                      {/* --- UPDATED: DISPLAY ALL NICHES --- */}
+                      <div style={{display:'flex', flexWrap:'wrap', gap:'8px', justifyContent:'center', marginBottom:'20px'}}>
+                          {profile.niches && profile.niches.length > 0 ? (
+                              profile.niches.map((n, i) => (
+                                  <span key={i} className="inf-badge" style={{marginBottom:0}}>{n}</span>
+                              ))
+                          ) : (
+                              <div className="inf-badge">{profile.niche || "Creator"}</div>
+                          )}
+                      </div>
+
+                      <p className="inf-bio">{profile.bio || "No bio available."}</p>
+                      
+                      {(profile.instagramHandle || profile.youtubeHandle) && (
+                            <div style={{textAlign:'center', marginTop:'15px'}}>
+                                <span className="social-label">Verified Sources</span>
+                                <div className="connected-socials">
+                                    {profile.instagramHandle && (
+                                        <a href={`https://instagram.com/${profile.instagramHandle}`} target="_blank" rel="noreferrer" className="social-badge insta">
+                                            <i className="fa-brands fa-instagram"></i> @{profile.instagramHandle}
+                                        </a>
+                                    )}
+                                    {profile.youtubeHandle && (
+                                        <a href={`https://youtube.com/@${profile.youtubeHandle}`} target="_blank" rel="noreferrer" className="social-badge yt">
+                                            <i className="fa-brands fa-youtube"></i> @{profile.youtubeHandle}
+                                        </a>
+                                      )}
+                                </div>
+                            </div>
+                      )}
+
+                      <button className="btn-primary w-100 mt-4" onClick={handleMessage}>Message</button>
+                  </div>
+                  <div className="inf-stats">
+                      <div className="stat-box">
+                          <div className="stat-num">{formatCompactNumber(profile.followerCount || 0)}</div>
+                          <div className="stat-label">Total Reach</div>
+                      </div>
+                  </div>
+               </aside>
+               <main className="inf-content">
+                  <h3 className="section-title">Portfolio</h3>
+                  <div className="masonry-container">
+                      {posts.map((p) => (
+                          <div key={p._id} className="masonry-item post-card">
+                              <img src={getImgUrl(p.image)} alt="post" />
+                              <div className="post-overlay">
+                                  <h5 style={{margin:0}}>{p.header}</h5>
+                                  <small className="text-muted">{p.caption}</small>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+               </main>
+            </div>
+          </div>
+        </>
+      );
+  }
+
+  // --- 2. BUSINESS LAYOUT ---
+  const profile = user.businessProfile || {};
+  return (
+    <>
+      <Navbar />
+      <div className="bizdash-wrapper">
+        <div className="bizdash-header-container" data-aos="fade-down">
+           <div className="bizdash-cover" style={{ backgroundImage: `url(${getImgUrl(profile.coverUrl)})` }}></div>
+           <div className="bizdash-profile-bar">
+              <div className="logo-wrapper">
+                  <img src={getImgUrl(profile.logoUrl)} className="bizdash-logo" alt="profile" />
+              </div>
+              <div className="profile-text">
+                  <h2>{profile.brandName || user.name}</h2>
+                  <p style={{color:'#0dcaf0'}}>{profile.industry} • {profile.location}</p>
+                  <button className="btn-primary mt-3" onClick={handleMessage}>Message Business</button>
+              </div>
+           </div>
+        </div>
+        <div className="bizdash-content">
+            <aside className="biz-details-card">
+                <h4>About</h4>
+                <div className="detail-row"><strong>Role</strong> Business</div>
+                <div className="detail-row"><strong>Website</strong> <a href={profile.websiteUrl} target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>{profile.websiteUrl || "N/A"}</a></div>
+                <div className="detail-bio"><strong>Target Audience:</strong><br/> {profile.targetAudience || "No details."}</div>
+            </aside>
+            <main className="biz-posts-area">
+                <h3>Recent Campaigns</h3>
+                <div className="masonry-container">
+                    {posts.map((p) => (
+                        <div key={p._id} className="masonry-item post-card">
+                            <img src={getImgUrl(p.image)} alt="post" />
+                            <div className="post-overlay">
+                                <h5 style={{margin:0}}>{p.header}</h5>
+                                <small className="text-muted">{p.caption}</small>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </main>
+        </div>
+      </div>
+    </>
+  );
+}
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\pages\ResetPassword.jsx
+// ==============================
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import API_BASE_URL from "../apiConfig"; // Ensure this path is correct for your project
+
+const ResetPassword = () => {
+  const { token } = useParams();
+  const navigate = useNavigate();
+  
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Sending token in URL and password in BODY
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }), 
+      });
+
+      // Check content type to avoid JSON.parse syntax errors if server returns HTML
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        throw new Error("Server returned non-JSON response. Check API URL.");
+      }
+
+      if (response.ok) {
+        alert("Password reset successfully! You can now login.");
+        navigate("/login");
+      } else {
+        setError(data.message || "Error resetting password");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Server connection failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div 
+      className="d-flex justify-content-center align-items-center vh-100" 
+      style={{ background: "linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)" }} // Blue Gradient Background
+    >
+      <div className="card p-4 shadow-lg" style={{ width: "100%", maxWidth: "400px", borderRadius: "15px" }}>
+        <h3 className="text-center mb-4 fw-bold text-primary">Reset Password</h3>
+        
+        {error && <div className="alert alert-danger" role="alert">{error}</div>}
+        {message && <div className="alert alert-success" role="alert">{message}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">New Password</label>
+            <input
+              type="password"
+              className="form-control form-control-lg"
+              placeholder="Enter new password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Confirm Password</label>
+            <input
+              type="password"
+              className="form-control form-control-lg"
+              placeholder="Type again to confirm"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-lg w-100 fw-bold" disabled={loading}>
+            {loading ? "Updating..." : "Update Password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ResetPassword;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\apiConfig.js
+// ==============================
+// This automatically detects if you are on localhost or deployed
+const API_BASE_URL = window.location.hostname === "localhost" 
+    ? "http://localhost:5000" 
+    : "https://adnova-backend.onrender.com"; // You will replace this string after deploying the backend
+
+export default API_BASE_URL;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\App.js
+// ==============================
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from './contexts/AuthContext'; 
+
+// --- Page Imports ---
+import Home from "./pages/home";
+import Business from "./pages/BusinessDashboard";
+import Influencer from "./pages/InfluencerDashboard";
+import ProfileSetup from "./components/ProfileSetup";
+import Messages from "./pages/Messages"; 
+import Marketplace from "./pages/MarketPlace";
+import PublicProfile from "./pages/PublicProfile"; // <--- NEW IMPORT
+import ResetPassword from "./pages/ResetPassword"; // <--- NEW IMPORT
+
+// --- Protected Route Component ---
+const ProtectedRoute = ({ element: Element }) => {
+    const { isLoggedIn, isProfileComplete } = useAuth();
+    if (!isLoggedIn) return <Navigate to="/" replace />;
+    if (!isProfileComplete) return <Navigate to="/profile-setup" replace />;
+    return <Element />;
+};
+
+function App() {
+    const auth = useAuth();
+    if (!auth || auth.isLoggedIn === undefined) return <div>Loading Application State...</div>;
+
+    const { role, userId } = auth;
+
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/profile-setup" element={<ProfileSetup userRole={role} userId={userId} />} />
+                
+                {/* --- Reset Password Route --- */}
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                
+                {/* --- Protected Routes --- */}
+                <Route path="/BusinessDashboard" element={<ProtectedRoute element={Business} />} />
+                <Route path="/InfluencerDashboard" element={<ProtectedRoute element={Influencer} />} />
+                
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/messages" element={<Messages />} /> 
+
+                {/* --- NEW PUBLIC PROFILE ROUTE --- */}
+                <Route path="/profile/:userId" element={<PublicProfile />} />
+
+            </Routes>
+        </Router>
+    );
+}
+
+export default App;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\App.test.js
+// ==============================
+import { render, screen } from '@testing-library/react';
+import App from './App';
+import { AuthProvider } from "./contexts/AuthContext";
+
+test("renders AdNova app or navbar", async () => {
+  render(
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+
+  // Wait for the navbar / app name to appear
+  const element = await screen.findAllByText(/adnova/i, {}, { timeout: 3000 });
+
+  expect(element.length).toBeGreaterThan(0);
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\index.js
+// ==============================
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+import { AuthProvider } from './contexts/AuthContext';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+     <AuthProvider> {/* <--- THIS MUST WRAP APP! */}
+      <App />
+    </AuthProvider>
+  </React.StrictMode>
+);
+
+reportWebVitals();
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\reportWebVitals.js
+// ==============================
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\setupTests.js
+// ==============================
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\client\src\smoke.test.js
+// ==============================
+test('smoke', () => {
+  expect(1 + 1).toBe(2);
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\config\multerConfig.js
+// ==============================
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Configure Cloudinary with keys from .env
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Storage
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'adnova_uploads', // Folder name in Cloudinary
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
+});
+
+const upload = multer({ storage: storage });
+
+export default upload;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\models\Conversation.js
+// ==============================
+import mongoose from "mongoose";
+
+const ConversationSchema = new mongoose.Schema({
+  participants: [{
+    type: String,
+    required: true
+  }], // ["user1@email.com", "user2@email.com"]
+  // Ensure at least one participant
+  participants: {
+    type: [String],
+    required: true,
+    validate: [arr => Array.isArray(arr) && arr.length > 0, 'At least one participant is required.']
+  },
+  lastMessage: { type: String, default: "New connection established" },
+  lastMessageTime: { type: String, default: () => new Date().toLocaleTimeString() },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Conversation = mongoose.model("Conversation", ConversationSchema);
+
+export default Conversation;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\models\Message.js
+// ==============================
+import mongoose from "mongoose";
+
+const MessageSchema = new mongoose.Schema({
+  room: { type: String, required: true },
+  author: { type: String, required: true },
+  message: { type: String, required: true },
+  time: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Message = mongoose.model("Message", MessageSchema);
+
+export default Message;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\models\Post.js
+// ==============================
+import mongoose from "mongoose";
+
+const PostSchema = new mongoose.Schema({
+  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  authorName: { type: String, required: true }, 
+  authorRole: { type: String, enum: ['business', 'influencer'], required: true },
+  authorImage: { type: String }, 
+  authorLocation: { type: String, default: "Global" }, // <--- ADDED THIS
+  image: { type: String, required: true },
+  header: { type: String },
+  caption: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
+export default mongoose.model("Post", PostSchema);
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\models\Request.js
+// ==============================
+import mongoose from "mongoose";
+
+const RequestSchema = new mongoose.Schema({
+  senderName: { type: String, required: true },
+  senderEmail: { type: String, required: true },
+  receiverEmail: { type: String, required: true },
+  status: { type: String, default: "pending" },
+  timestamp: { type: String, default: () => new Date().toLocaleTimeString() }
+});
+
+const Request = mongoose.model("Request", RequestSchema);
+
+export default Request;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\models\User.js
+// ==============================
+// ==============================
+// FILE: server/models/User.js
+// ==============================
+import mongoose from "mongoose";
+
+const emptyStringToNull = (v) => (v === '' ? undefined : v);
+
+const businessProfileSchema = new mongoose.Schema({
+    brandName: { type: String, trim: true, set: emptyStringToNull },
+    industry: { type: String, trim: true, set: emptyStringToNull },
+    niches: [{ type: String }], 
+    websiteUrl: { type: String, trim: true, set: emptyStringToNull },
+    location: { type: String, trim: true, set: emptyStringToNull },
+    ownerName: { type: String, trim: true }, 
+    phoneNumber: { type: String, trim: true },
+    targetAudience: { type: String, set: emptyStringToNull },
+    avgBudgetPerCampaign: { type: String, set: emptyStringToNull },
+    preferredPlatforms: [{ type: String }],
+    logoUrl: { type: String, trim: true, set: emptyStringToNull }, 
+    coverUrl: { type: String, trim: true, set: emptyStringToNull },
+});
+
+const influencerProfileSchema = new mongoose.Schema({
+    displayName: { type: String, trim: true, set: emptyStringToNull },
+    niches: [{ type: String }], 
+    niche: { type: String, trim: true, set: emptyStringToNull }, 
+    location: { type: String, trim: true, set: emptyStringToNull },
+    bio: { type: String, trim: true, set: emptyStringToNull },
+    pfp: { type: String, trim: true, set: emptyStringToNull },
+    coverUrl: { type: String, trim: true, set: emptyStringToNull },
+    
+    // CHANGED: Added phoneNumber here to fix data loss
+    phoneNumber: { type: String, trim: true }, 
+
+    instagramHandle: { type: String, trim: true },
+    youtubeHandle: { type: String, trim: true },
+    
+    followerCount: { type: Number, default: 0 },
+    lastSocialUpdate: { type: Date, default: null },
+    
+    rateCard: { type: String },
+});
+
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ["influencer", "business"], required: true },
+    businessProfile: { type: businessProfileSchema, required: function() { return this.role === 'business'; } },
+    influencerProfile: { type: influencerProfileSchema, required: function() { return this.role === 'influencer'; } },
+    isProfileComplete: { type: Boolean, default: false }
+}, { timestamps: true });
+
+export default mongoose.model("User", userSchema);
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\routes\auth.js
+// ==============================
+// ==============================
+// FILE: server/routes/auth.js
+// ==============================
+import express from "express";
+import bcrypt from "bcryptjs";
+import User from "../models/User.js";
+import upload from "../config/multerConfig.js"; 
+import { scrapeSocials } from "../utils/socialScraper.js"; 
+import jwt from 'jsonwebtoken';
+import nodemailer from "nodemailer";
+
+const router = express.Router();
+
+// --- SIGNUP ROUTE ---
+router.post("/signup", async (req, res) => {
+    try {
+        let { name, email, password, role, phone, ownerName, businessName } = req.body;
+        
+        if (role === 'business' && !name && businessName) {
+            name = businessName;
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ success: false, message: "Email already registered." });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        let profileData = {};
+        if (role === "business") {
+            profileData.businessProfile = {
+                brandName: businessName || name, 
+                ownerName: ownerName,
+                phoneNumber: phone
+            };
+        } else if (role === "influencer") {
+            profileData.influencerProfile = {
+                displayName: name,
+                phoneNumber: phone 
+            };
+        }
+        
+        const user = new User({ 
+            name, email, password: hashedPassword, role, ...profileData 
+        });
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            message: "User registered!", 
+            role: user.role, 
+            isProfileComplete: user.isProfileComplete, 
+            userId: user._id, 
+            name: user.name, 
+            email: user.email 
+        });
+    } catch (err) {
+        console.error("Signup Error:", err);
+        res.status(500).json({ success: false, message: err.message || "Signup failed." });
+    }
+});
+
+// --- LOGIN ROUTE ---
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
+
+        if (user.role === 'influencer') {
+            const ig = user.influencerProfile?.instagramHandle;
+            const yt = user.influencerProfile?.youtubeHandle;
+            if (ig || yt) {
+                scrapeSocials(ig, yt).then(async (count) => {
+                    if (count > 0) {
+                        await User.findByIdAndUpdate(user._id, {
+                            'influencerProfile.followerCount': count,
+                            'influencerProfile.lastSocialUpdate': new Date()
+                        });
+                    }
+                }).catch(err => console.error("Login Scrape error:", err.message));
+            }
+        }
+
+        res.json({ success: true, role: user.role, isProfileComplete: user.isProfileComplete, userId: user._id, name: user.name, email: user.email });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// --- UPDATE PROFILE ---
+router.post("/update-profile", async (req, res) => {
+    try {
+        const { userId, role, profileData } = req.body;
+        let updateQuery = {};
+        
+        if (role === 'business') {
+            updateQuery = { $set: { businessProfile: profileData, isProfileComplete: true } };
+        } else if (role === 'influencer') {
+            updateQuery = { $set: { influencerProfile: profileData, isProfileComplete: true } };
+        }
+
+        const user = await User.findByIdAndUpdate(userId, updateQuery, { new: true });
+
+        if (role === 'influencer') {
+            const ig = profileData.instagramHandle;
+            const yt = profileData.youtubeHandle;
+            if (ig || yt) {
+                scrapeSocials(ig, yt).then(async (count) => {
+                    if (count > 0) {
+                        await User.findByIdAndUpdate(userId, {
+                            'influencerProfile.followerCount': count,
+                            'influencerProfile.lastSocialUpdate': new Date()
+                        });
+                    }
+                }).catch(err => console.error("Scrape failed:", err.message));
+            }
+        }
+
+        res.json({ success: true, user });
+    } catch (err) {
+        console.error("Update Error:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// --- FORGOT PASSWORD ---
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Generate a token valid for 1 hour
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: "1h" });
+
+        // IMPORTANT: Ensure this matches your Frontend URL
+        const link = `http://localhost:5173/reset-password/${token}`;
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Reset Password Link',
+            text: `Click the following link to reset your password: ${link}`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ message: "Reset link sent to email" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// --- RESET PASSWORD (FIXED ROUTE) ---
+router.post("/reset-password/:token", async (req, res) => {
+    try {
+        // 1. Get token from URL Parameter
+        const { token } = req.params;
+        // 2. Get new password from Body
+        const { password } = req.body;
+        
+        if (!token) return res.status(400).json({ message: "Token missing" });
+        if (!password) return res.status(400).json({ message: "Password missing" });
+
+        // 3. Verify Token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        
+        // 4. Hash New Password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // 5. Update User
+        await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+        
+        res.json({ success: true, message: "Password updated successfully" });
+    } catch (err) {
+        console.error("Reset Password Error:", err.message);
+        res.status(500).json({ success: false, message: "Invalid or expired token" });
+    }
+});
+
+// --- UPLOAD IMAGE ---
+router.post("/upload-image", upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded." });
+        const { userId, fieldName, role } = req.body; 
+        const fileUrl = req.file.path; 
+        let updatePath = role === 'business' ? `businessProfile.${fieldName}` : `influencerProfile.${fieldName}`; 
+        await User.findByIdAndUpdate(userId, { $set: { [updatePath]: fileUrl } }, { new: true });
+        res.json({ success: true, fileUrl });
+    } catch (err) {
+        console.error("Upload Error:", err);
+        res.status(500).json({ success: false, message: "Upload failed." });
+    }
+});
+
+// --- GET PROFILE ---
+router.get("/profile/:userId", async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).select('-password'); 
+        if (!user) return res.status(404).json({ success: false, message: "User not found." });
+        res.json({ success: true, user });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Fetch failed." });
+    }
+});
+
+// --- FIND PARTNERS ---
+router.get("/partners", async (req, res) => {
+    try {
+        const { role, location, niche } = req.query;
+        const targetRole = role === 'business' ? 'influencer' : 'business';
+        let query = { role: targetRole, isProfileComplete: true };
+
+        if (location) {
+            query.$or = [
+                { "businessProfile.location": { $regex: location, $options: "i" } },
+                { "influencerProfile.location": { $regex: location, $options: "i" } }
+            ];
+        }
+        if (niche) {
+            if (targetRole === 'influencer') query["influencerProfile.niche"] = { $regex: niche, $options: "i" };
+            else query["businessProfile.industry"] = { $regex: niche, $options: "i" };
+        }
+
+        const partners = await User.find(query).select("name email role businessProfile influencerProfile");
+        res.json({ success: true, partners });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Search failed." });
+    }
+});
+
+// --- REFRESH SOCIALS ---
+router.post("/refresh-socials", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findById(userId);
+        if (!user || user.role !== 'influencer') return res.status(400).json({ success: false, message: "Invalid user." });
+
+        const ig = user.influencerProfile?.instagramHandle;
+        const yt = user.influencerProfile?.youtubeHandle;
+
+        if (!ig && !yt) return res.json({ success: false, message: "No handles found." });
+
+        const count = await scrapeSocials(ig, yt);
+        if (count > 0) {
+            user.influencerProfile.followerCount = count;
+            user.influencerProfile.lastSocialUpdate = new Date();
+            await user.save();
+            return res.json({ success: true, count: count, message: "Stats updated!" });
+        } else {
+            return res.json({ success: false, message: "Scrape found 0." });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+export default router;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\routes\Posts.js
+// ==============================
+// ==============================
+// FILE: server/routes/posts.js
+// ==============================
+import express from "express";
+import Post from "../models/Post.js";
+import User from "../models/User.js";
+
+const router = express.Router();
+
+// --- CREATE POST ROUTE ---
+router.post("/create", async (req, res) => {
+    try {
+        const { userId, role, header, caption, image } = req.body;
+
+        // 1. Fetch Author Details to embed in the post
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        let authorName, authorImage, authorLocation;
+
+        if (role === 'business') {
+            authorName = user.businessProfile?.brandName || user.name;
+            authorImage = user.businessProfile?.logoUrl;
+            authorLocation = user.businessProfile?.location || "Global";
+        } else {
+            authorName = user.influencerProfile?.displayName || user.name;
+            authorImage = user.influencerProfile?.pfp;
+            authorLocation = user.influencerProfile?.location || "Global";
+        }
+
+        // 2. Create Post
+        const newPost = new Post({
+            authorId: userId,
+            authorName,
+            authorRole: role,
+            authorImage,
+            authorLocation,
+            image,
+            header,
+            caption
+        });
+
+        await newPost.save();
+        res.json({ success: true, post: newPost });
+
+    } catch (err) {
+        console.error("Create Post Error:", err);
+        res.status(500).json({ success: false, message: "Failed to create post" });
+    }
+});
+
+// --- FEED ROUTE (Fixed) ---
+router.get("/feed", async (req, res) => {
+    try {
+        const { userLocation, userId, search, location, minReach, niche, viewerRole } = req.query;
+        
+        let query = {};
+        if (userId) query.authorId = { $ne: userId }; 
+
+        // CROSS-ROLE LOGIC
+        if (viewerRole) {
+            // If I am Business, I want Influencer posts
+            if (viewerRole === 'business') query.authorRole = 'influencer';
+            // If I am Influencer, I want Business posts
+            else if (viewerRole === 'influencer') query.authorRole = 'business';
+        }
+
+        if (search) query.authorName = { $regex: search, $options: "i" };
+        if (location) query.authorLocation = { $regex: location, $options: "i" };
+
+        let posts = await Post.find(query).sort({ createdAt: -1 }).lean();
+
+        // Filter Loop (Reach + Niche)
+        const filteredPosts = [];
+        for (const post of posts) {
+            const author = await User.findById(post.authorId).select('influencerProfile businessProfile role');
+            if(!author) continue;
+
+            // Reach Check (Only relevant if searching for Influencers)
+            if (viewerRole === 'business' && minReach && Number(minReach) > 0) {
+                const count = author.influencerProfile?.followerCount || 0;
+                if (count < Number(minReach)) continue; 
+            }
+
+            // Niche Check
+            if (niche) {
+                const userNiches = author.role === 'business' ? author.businessProfile?.niches : author.influencerProfile?.niches;
+                if (!userNiches || !userNiches.includes(niche)) continue;
+            }
+
+            post.authorNiches = author.role === 'business' ? author.businessProfile?.niches : author.influencerProfile?.niches;
+            filteredPosts.push(post);
+        }
+        
+        posts = filteredPosts;
+
+        // Location Sort
+        if (userLocation && !location) {
+            const lowerUserLoc = userLocation.toLowerCase().trim();
+            posts.sort((a, b) => {
+                const locA = (a.authorLocation || "").toLowerCase();
+                const locB = (b.authorLocation || "").toLowerCase();
+                if (locA.includes(lowerUserLoc) && !locB.includes(lowerUserLoc)) return -1;
+                if (!locA.includes(lowerUserLoc) && locB.includes(lowerUserLoc)) return 1;
+                return 0;
+            });
+        }
+
+        res.json({ success: true, posts });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// --- GET USER POSTS ROUTE ---
+router.get("/user/:userId", async (req, res) => {
+    try {
+        const posts = await Post.find({ authorId: req.params.userId }).sort({ createdAt: -1 });
+        res.json({ success: true, posts });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+export default router;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\auth.api.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
+import { expect } from 'chai';
+import express from 'express';
+import bodyParser from 'body-parser';
+import authRoutes from '../routes/auth.js';
+import User from '../models/User.js';
+
+describe('Auth API', function() {
+  let mongoServer;
+  let app;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+    app = express();
+    app.use(bodyParser.json());
+    app.use('/api/auth', authRoutes);
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await User.deleteMany({});
+  });
+
+  it('should signup a new business user', async function() {
+    const res = await request(app)
+      .post('/api/auth/signup')
+      .send({
+        name: 'Business User',
+        email: 'business@example.com',
+        password: 'password123',
+        role: 'business',
+        businessName: 'Test Brand',
+        ownerName: 'Owner',
+        phone: '1234567890'
+      });
+    expect(res.status).to.equal(200);
+    expect(res.body.success).to.be.true;
+    const user = await User.findOne({ email: 'business@example.com' });
+    expect(user).to.exist;
+    expect(user.role).to.equal('business');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\auth.login.api.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
+import { expect } from 'chai';
+import express from 'express';
+import bodyParser from 'body-parser';
+import authRoutes from '../routes/auth.js';
+import User from '../models/User.js';
+
+describe('Auth API - Login', function() {
+  let mongoServer;
+  let app;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+    app = express();
+    app.use(bodyParser.json());
+    app.use('/api/auth', authRoutes);
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await User.deleteMany({});
+  });
+
+  it('should login a registered user', async function() {
+    // First, signup a user
+    const signupRes = await request(app)
+      .post('/api/auth/signup')
+      .send({
+        name: 'Login User',
+        email: 'login@example.com',
+        password: 'password123',
+        role: 'business',
+        businessName: 'Login Brand',
+        ownerName: 'Owner',
+        phone: '1234567890'
+      });
+    expect(signupRes.status).to.equal(200);
+    // Now, login
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'login@example.com',
+        password: 'password123'
+      });
+    expect(loginRes.status).to.equal(200);
+    expect(loginRes.body.success).to.be.true;
+    expect(loginRes.body.email).to.equal('login@example.com');
+  });
+
+  it('should not login with wrong password', async function() {
+    // Signup a user
+    await request(app)
+      .post('/api/auth/signup')
+      .send({
+        name: 'Login User',
+        email: 'loginfail@example.com',
+        password: 'password123',
+        role: 'business',
+        businessName: 'Login Brand',
+        ownerName: 'Owner',
+        phone: '1234567890'
+      });
+    // Try wrong password
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'loginfail@example.com',
+        password: 'wrongpassword'
+      });
+    expect(loginRes.status).to.equal(401);
+    expect(loginRes.body.success).to.be.false;
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\conversation.model.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { expect } from 'chai';
+import Conversation from '../models/Conversation.js';
+
+describe('Conversation Model', function() {
+  let mongoServer;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await Conversation.deleteMany({});
+  });
+
+  it('should not save without participants', async function() {
+    const conversation = new Conversation({});
+    let err;
+    try {
+      await conversation.save();
+    } catch (error) {
+      err = error;
+    }
+    expect(err).to.exist;
+    expect(err.errors).to.have.property('participants');
+  });
+
+  it('should save a valid conversation', async function() {
+    const conversation = new Conversation({
+      participants: ['user1@email.com', 'user2@email.com']
+    });
+    const savedConversation = await conversation.save();
+    expect(savedConversation._id).to.exist;
+    expect(savedConversation.participants).to.include('user1@email.com');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\integration.flow.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
+import { expect } from 'chai';
+import express from 'express';
+import bodyParser from 'body-parser';
+import authRoutes from '../routes/auth.js';
+import postRoutes from '../routes/posts.js';
+import User from '../models/User.js';
+import Post from '../models/Post.js';
+
+describe('Integration Flow', function() {
+  let mongoServer;
+  let app;
+  let userId;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+    app = express();
+    app.use(bodyParser.json());
+    app.use('/api/auth', authRoutes);
+    app.use('/api/posts', postRoutes);
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await User.deleteMany({});
+    await Post.deleteMany({});
+  });
+
+  it('should signup, login, create post, and fetch feed', async function() {
+    // Signup
+    const signupRes = await request(app)
+      .post('/api/auth/signup')
+      .send({
+        name: 'Flow User',
+        email: 'flow@example.com',
+        password: 'password123',
+        role: 'business',
+        businessName: 'Flow Brand',
+        ownerName: 'Owner',
+        phone: '1234567890'
+      });
+    expect(signupRes.status).to.equal(200);
+    userId = signupRes.body.userId;
+
+    // Login
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'flow@example.com',
+        password: 'password123'
+      });
+    expect(loginRes.status).to.equal(200);
+    expect(loginRes.body.success).to.be.true;
+
+    // Create Post
+    const postRes = await request(app)
+      .post('/api/posts/create')
+      .send({
+        userId,
+        role: 'business',
+        header: 'Integration Header',
+        caption: 'Integration Caption',
+        image: 'integration.jpg'
+      });
+    expect(postRes.status).to.equal(200);
+    expect(postRes.body.success).to.be.true;
+
+    // Fetch Feed
+    const feedRes = await request(app)
+      .get('/api/posts/feed')
+      .query({ viewerRole: 'influencer' });
+    expect(feedRes.status).to.equal(200);
+    expect(feedRes.body.success).to.be.true;
+    expect(feedRes.body.posts).to.be.an('array');
+    expect(feedRes.body.posts[0].header).to.equal('Integration Header');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\message.model.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { expect } from 'chai';
+import Message from '../models/Message.js';
+
+describe('Message Model', function() {
+  let mongoServer;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await Message.deleteMany({});
+  });
+
+  it('should not save without required fields', async function() {
+    const message = new Message({});
+    let err;
+    try {
+      await message.save();
+    } catch (error) {
+      err = error;
+    }
+    expect(err).to.exist;
+    expect(err.errors).to.have.property('room');
+    expect(err.errors).to.have.property('author');
+    expect(err.errors).to.have.property('message');
+    expect(err.errors).to.have.property('time');
+  });
+
+  it('should save a valid message', async function() {
+    const message = new Message({
+      room: 'room1',
+      author: 'author1',
+      message: 'Hello',
+      time: '12:00 PM'
+    });
+    const savedMessage = await message.save();
+    expect(savedMessage._id).to.exist;
+    expect(savedMessage.room).to.equal('room1');
+    expect(savedMessage.author).to.equal('author1');
+    expect(savedMessage.message).to.equal('Hello');
+    expect(savedMessage.time).to.equal('12:00 PM');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\parseCount.util.test.js
+// ==============================
+import { expect } from 'chai';
+// Import parseCount directly from the file (not exported, so we redefine for test)
+const parseCount = (str) => {
+    if (!str) return 0;
+    const cleanStr = str.replace(/[^0-9.kKmM]/g, '').toLowerCase();
+    let multiplier = 1;
+    if (cleanStr.includes('k')) multiplier = 1000;
+    if (cleanStr.includes('m')) multiplier = 1000000;
+    const num = parseFloat(cleanStr.replace(/[km]/g, ''));
+    return Math.floor(num * multiplier);
+};
+
+describe('parseCount Utility', function() {
+  it('should parse numbers with K', function() {
+    expect(parseCount('1.2K')).to.equal(1200);
+    expect(parseCount('5K')).to.equal(5000);
+  });
+  it('should parse numbers with M', function() {
+    expect(parseCount('2M')).to.equal(2000000);
+    expect(parseCount('0.5M')).to.equal(500000);
+  });
+  it('should parse plain numbers', function() {
+    expect(parseCount('123')).to.equal(123);
+    expect(parseCount('9999')).to.equal(9999);
+  });
+  it('should return 0 for invalid input', function() {
+    expect(parseCount('')).to.equal(0);
+    expect(parseCount(null)).to.equal(0);
+    expect(parseCount(undefined)).to.equal(0);
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\post.model.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { expect } from 'chai';
+import Post from '../models/Post.js';
+
+
+// Dummy ObjectId for testing
+function getObjectId() {
+  return new mongoose.Types.ObjectId();
+}
+
+describe('Post Model', function() {
+  let mongoServer;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await Post.deleteMany({});
+  });
+
+  it('should not save without required fields', async function() {
+    const post = new Post({});
+    let err;
+    try {
+      await post.save();
+    } catch (error) {
+      err = error;
+    }
+    expect(err).to.exist;
+    expect(err.errors).to.have.property('authorId');
+    expect(err.errors).to.have.property('authorName');
+    expect(err.errors).to.have.property('authorRole');
+    expect(err.errors).to.have.property('image');
+  });
+
+  it('should save a valid post', async function() {
+    const post = new Post({
+      authorId: getObjectId(),
+      authorName: 'Test Author',
+      authorRole: 'business',
+      image: 'test.jpg'
+    });
+    const savedPost = await post.save();
+    expect(savedPost._id).to.exist;
+    expect(savedPost.authorName).to.equal('Test Author');
+    expect(savedPost.authorRole).to.equal('business');
+    expect(savedPost.image).to.equal('test.jpg');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\posts.api.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
+import { expect } from 'chai';
+import express from 'express';
+import bodyParser from 'body-parser';
+import authRoutes from '../routes/auth.js';
+import postRoutes from '../routes/posts.js';
+import User from '../models/User.js';
+import Post from '../models/Post.js';
+
+describe('Posts API', function() {
+  let mongoServer;
+  let app;
+  let userId;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+    app = express();
+    app.use(bodyParser.json());
+    app.use('/api/auth', authRoutes);
+    app.use('/api/posts', postRoutes);
+    // Create a user for post creation
+    const userRes = await request(app)
+      .post('/api/auth/signup')
+      .send({
+        name: 'Poster',
+        email: 'poster@example.com',
+        password: 'password123',
+        role: 'business',
+        businessName: 'Poster Brand',
+        ownerName: 'Owner',
+        phone: '1234567890'
+      });
+    userId = userRes.body.userId;
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await Post.deleteMany({});
+  });
+
+  it('should create a post', async function() {
+    const res = await request(app)
+      .post('/api/posts/create')
+      .send({
+        userId,
+        role: 'business',
+        header: 'Test Header',
+        caption: 'Test Caption',
+        image: 'test.jpg'
+      });
+    expect(res.status).to.equal(200);
+    expect(res.body.success).to.be.true;
+    expect(res.body.post.header).to.equal('Test Header');
+  });
+
+  it('should fetch posts feed', async function() {
+    // Create a post first
+    await request(app)
+      .post('/api/posts/create')
+      .send({
+        userId,
+        role: 'business',
+        header: 'Feed Header',
+        caption: 'Feed Caption',
+        image: 'feed.jpg'
+      });
+    const res = await request(app)
+      .get('/api/posts/feed')
+      .query({ viewerRole: 'influencer' });
+    expect(res.status).to.equal(200);
+    expect(res.body.success).to.be.true;
+    expect(res.body.posts).to.be.an('array');
+    expect(res.body.posts[0].header).to.equal('Feed Header');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\request.model.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { expect } from 'chai';
+import Request from '../models/Request.js';
+
+describe('Request Model', function() {
+  let mongoServer;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await Request.deleteMany({});
+  });
+
+  it('should not save without required fields', async function() {
+    const request = new Request({});
+    let err;
+    try {
+      await request.save();
+    } catch (error) {
+      err = error;
+    }
+    expect(err).to.exist;
+    expect(err.errors).to.have.property('senderName');
+    expect(err.errors).to.have.property('senderEmail');
+    expect(err.errors).to.have.property('receiverEmail');
+  });
+
+  it('should save a valid request', async function() {
+    const request = new Request({
+      senderName: 'Alice',
+      senderEmail: 'alice@email.com',
+      receiverEmail: 'bob@email.com'
+    });
+    const savedRequest = await request.save();
+    expect(savedRequest._id).to.exist;
+    expect(savedRequest.senderName).to.equal('Alice');
+    expect(savedRequest.senderEmail).to.equal('alice@email.com');
+    expect(savedRequest.receiverEmail).to.equal('bob@email.com');
+    expect(savedRequest.status).to.equal('pending');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\sample.test.js
+// ==============================
+import { expect } from 'chai';
+
+describe('Sample Test', function() {
+  it('should return true', function() {
+    expect(true).to.be.true;
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\test\user.model.test.js
+// ==============================
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { expect } from 'chai';
+import User from '../models/User.js';
+
+describe('User Model', function() {
+  let mongoServer;
+
+  before(async function() {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), { dbName: 'test' });
+  });
+
+  after(async function() {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  afterEach(async function() {
+    await User.deleteMany({});
+  });
+
+  it('should not save without required fields', async function() {
+    const user = new User({});
+    let err;
+    try {
+      await user.save();
+    } catch (error) {
+      err = error;
+    }
+    expect(err).to.exist;
+    expect(err.errors).to.have.property('email');
+  });
+
+  it('should save a valid user', async function() {
+    const user = new User({
+      email: 'test@example.com',
+      password: 'password123',
+      name: 'Test User',
+      role: 'business',
+      businessProfile: {
+        brandName: 'Test Brand'
+      }
+    });
+    const savedUser = await user.save();
+    expect(savedUser._id).to.exist;
+    expect(savedUser.email).to.equal('test@example.com');
+    expect(savedUser.role).to.equal('business');
+  });
+});
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\utils\sendEmail.js
+// ==============================
+import nodemailer from 'nodemailer';
+
+const sendEmail = async (options) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+        const message = {
+            from: `AdNova Support <${process.env.EMAIL_USER}>`,
+            to: options.email,
+            subject: options.subject,
+            text: options.message,
+        };
+        const info = await transporter.sendMail(message);
+        console.log("Email sent: " + info.response);
+    } catch (error) {
+        console.error("Nodemailer Error:", error);
+        throw new Error("Email sending failed");
+    }
+};
+
+export default sendEmail;
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\utils\socialScraper.js
+// ==============================
+import puppeteer from 'puppeteer';
+
+const delay=(ms)=>new Promise(resolve=>setTimeout(resolve, ms));
+
+const parseCount = (str) => {
+    if(!str) return '0';
+    let num = parseFloat(str.replace(/,/g, ''));
+    if(str.toUpperCase().includes('K')) num *= 1000;
+    else if(str.toUpperCase().includes('M')) num *= 1000000;
+    else if(str.toUpperCase().includes('B')) num *= 1000000000;
+    return Math.floor(num).toString();
+};
+
+export const scrapeSocials = async (instaHandle, youtubeHandle) => {
+    let browser = null;
+    try {
+        console.log(`--- SCRAPING: ${instaHandle} ---`);
+        browser = await puppeteer.launch({
+            headless: "new",
+            defaultViewport: {width:1280, height:800},
+            args: ['--no-sandbox','--disable-setuid-sandbox','--disable-blink-features=AutomationControlled']
+        });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setExtraHTTPHeaders({'Accept-Language': 'en-US,en;q=0.9'});
+
+        let rawCount = '0';
+
+        if(instaHandle){
+            try{
+                await page.goto(`https://www.instagram.com/${instaHandle}/`, {waitUntil:'networkidle2', timeout:30000});
+                
+                await page.mouse.move(Math.random()*100, Math.random()*100);
+                await delay(500);
+
+                const metaContent = await page.evaluate(() => {
+                    const meta = document.querySelector('meta[name="description"]');
+                    return meta ? meta.content : null;
+                });
+
+                if(metaContent){
+                    const match = metaContent.match(/^([0-9.,KMB]+)\s+Followers/i);
+                    if(match && match[1]) rawCount = match[1];
+                }
+                
+                if(rawCount === '0'){
+                     const pageText = await page.evaluate(() => document.body.innerText);
+                     const textMatch = pageText.match(/([0-9.,KMB]+)\s+followers/i);
+                     if(textMatch && textMatch[1]) rawCount = textMatch[1];
+                }
+            }catch(e){console.log(e.message);}
+        }
+
+        if(youtubeHandle && rawCount === '0'){
+             try {
+                await page.goto(`https://www.youtube.com/@${youtubeHandle}`, {waitUntil:'domcontentloaded'});
+                const meta = await page.evaluate(() => document.querySelector('meta[name="description"]')?.content);
+                const match = meta?.match(/([0-9.,KMB]+)\s+subscribers/i);
+                if(match && match[1]) rawCount = match[1];
+            } catch(e){console.log(e.message);}
+        }
+
+        await browser.close();
+        
+        // CONVERT "40M" -> "40000000"
+        const finalCount = parseCount(rawCount);
+        console.log(`Raw: ${rawCount} | Parsed: ${finalCount}`);
+        return finalCount;
+
+    } catch (e) {
+        if (browser) await browser.close();
+        return '0';
+    }
+};
+// ==============================
+// FILE: D:\CC\adNova\AdNovaa-main\server\index.js
+// ==============================
+// ==============================
+// FILE: server/index.js
+// ==============================
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import { createServer } from "http"; 
+import { Server } from "socket.io";
+import path from "path";
+import { fileURLToPath } from "url";
+import cron from "node-cron"; 
+import { scrapeSocials } from "./utils/socialScraper.js";
+
+// Route Imports
+import authRoutes from './routes/auth.js';
+import postRoutes from "./routes/Posts.js"; 
+import Request from "./models/Request.js"; 
+import Message from "./models/Message.js";
+import Conversation from "./models/Conversation.js";
+import User from "./models/User.js"; 
+
+dotenv.config();
+
+// Fix directory path for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const httpServer = createServer(app);
+
+// --- DYNAMIC CORS CONFIG ---
+// We allow Localhost (dev) and the Production URL (from .env)
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  process.env.CLIENT_URL // You will set this in Render Dashboard later (e.g., https://adnova.vercel.app)
+];
+
+const io = new Server(httpServer, {
+  cors: { 
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+});
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+}));
+
+app.use(bodyParser.json());
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Connect to MongoDB Atlas (Production DB)
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log("MongoDB connection error:", err));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes); 
+
+// --- CRON JOB: REFRESH FOLLOWERS EVERY 24 HRS ---
+cron.schedule('0 0 * * *', async () => {
+    console.log("Running Daily Social Scraper...");
+    try {
+        const influencers = await User.find({ role: 'influencer' });
+        for (const user of influencers) {
+            const inf = user.influencerProfile;
+            if (inf.instagramHandle || inf.youtubeHandle) {
+                const count = await scrapeSocials(inf.instagramHandle, inf.youtubeHandle);
+                if (count > 0) {
+                    user.influencerProfile.followerCount = count;
+                    user.influencerProfile.lastSocialUpdate = new Date();
+                    await user.save();
+                }
+            }
+        }
+    } catch (e) { console.error("Cron Error", e); }
+});
+
+// --- SOCKET LOGIC ---
+io.on("connection", (socket) => {
+  socket.on("register_user", async (email) => {
+    if (!email) return;
+    const normalizedEmail = email.toLowerCase();
+    socket.join(normalizedEmail);
+    try {
+      const pendingRequests = await Request.find({ receiverEmail: normalizedEmail });
+      socket.emit("existing_requests", pendingRequests);
+      const conversations = await Conversation.find({ participants: normalizedEmail });
+      
+      const formattedConversations = await Promise.all(conversations.map(async (conv) => {
+        const otherUserEmail = conv.participants.find(p => p !== normalizedEmail) || normalizedEmail;
+        const user = await User.findOne({ email: otherUserEmail });
+        let displayName = otherUserEmail.split("@")[0];
+        let displayImage = ""; 
+
+        if (user) {
+            if (user.role === 'business') {
+                displayName = user.businessProfile?.brandName || user.name;
+                displayImage = user.businessProfile?.logoUrl;
+            } else {
+                displayName = user.influencerProfile?.displayName || user.name;
+                displayImage = user.influencerProfile?.pfp;
+            }
+        }
+
+        return {
+          id: conv._id,
+          email: otherUserEmail,
+          name: displayName,
+          image: displayImage, 
+          role: "connected",
+          lastMessage: conv.lastMessage,
+          time: conv.lastMessageTime
+        };
+      }));
+      socket.emit("existing_conversations", formattedConversations);
+    } catch (err) { console.error(err); }
+  });
+
+  socket.on("join_room", async (room) => {
+    socket.join(room);
+    const history = await Message.find({ room }).sort({ createdAt: 1 });
+    socket.emit("chat_history", history);
+  });
+
+  socket.on("send_message", async (data) => {
+    const { room, author, message, time, participants } = data;
+    const msg = new Message({ room, author, message, time });
+    await msg.save();
+    if (participants) {
+        await Conversation.findOneAndUpdate({ participants: { $all: participants } }, { lastMessage: "New Message", lastMessageTime: time });
+    }
+    io.in(room).emit("receive_message", data); 
+  });
+
+  socket.on("send_request", async (data) => {
+    const { to, requestData } = data;
+    const sender = requestData.email.toLowerCase();
+    const receiver = to.toLowerCase();
+    if (sender === receiver) return;
+    
+    const existingConv = await Conversation.findOne({ participants: { $all: [sender, receiver] } });
+    const existingReq = await Request.findOne({ $or: [{ senderEmail: sender, receiverEmail: receiver }, { senderEmail: receiver, receiverEmail: sender }] });
+    if (existingConv || existingReq) return; 
+
+    const newRequest = new Request({ senderName: requestData.name, senderEmail: sender, receiverEmail: receiver, timestamp: requestData.time });
+    await newRequest.save();
+    socket.to(receiver).emit("receive_request", { ...requestData, _id: newRequest._id });
+  });
+
+  socket.on("accept_request", async (data) => {
+    const { requestId, acceptorEmail, acceptorName } = data;
+    const req = await Request.findById(requestId);
+    if (!req) return;
+    const senderEmail = req.senderEmail.toLowerCase();
+    const myEmail = acceptorEmail.toLowerCase();
+    const newConv = new Conversation({ participants: [senderEmail, myEmail], lastMessage: "Conversation Started", lastMessageTime: "Now" });
+    await newConv.save();
+    await Request.findByIdAndDelete(requestId);
+    
+    const acceptorUser = await User.findOne({ email: myEmail });
+    let acceptorImage = "";
+    if(acceptorUser) {
+      acceptorImage = acceptorUser.role === 'business' ? acceptorUser.businessProfile?.logoUrl : acceptorUser.influencerProfile?.pfp;
+    }
+
+    socket.to(senderEmail).emit("request_accepted", { email: myEmail, name: acceptorName, image: acceptorImage, conversationId: newConv._id });
+    socket.emit("request_accepted_confirm", { email: senderEmail, conversationId: newConv._id });
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

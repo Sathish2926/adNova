@@ -1,87 +1,74 @@
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer';
 
-let browser = null;
+const delay=(ms)=>new Promise(resolve=>setTimeout(resolve, ms));
+
+const parseCount = (str) => {
+    if(!str) return '0';
+    let num = parseFloat(str.replace(/,/g, ''));
+    if(str.toUpperCase().includes('K')) num *= 1000;
+    else if(str.toUpperCase().includes('M')) num *= 1000000;
+    else if(str.toUpperCase().includes('B')) num *= 1000000000;
+    return Math.floor(num).toString();
+};
 
 export const scrapeSocials = async (instaHandle, youtubeHandle) => {
-    // Return '0' immediately if no handles provided
-    if (!instaHandle && !youtubeHandle) return '0';
-
+    let browser = null;
     try {
-        // Singleton pattern: Launch browser only if not already open or disconnected
-        if (!browser || !browser.isConnected()) {
-            browser = await puppeteer.launch({
-                args: chromium.args,
-                defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath(),
-                headless: chromium.headless,
-                ignoreHTTPSErrors: true,
-            });
-        }
-
-        const page = await browser.newPage();
-
-        // OPTIMIZATION: Block images, fonts, and stylesheets to save memory/cpu
-        await page.setRequestInterception(true);
-        page.on('request', (req) => {
-            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
-                req.abort();
-            } else {
-                req.continue();
-            }
+        console.log(`--- SCRAPING: ${instaHandle} ---`);
+        browser = await puppeteer.launch({
+            headless: "new",
+            defaultViewport: {width:1280, height:800},
+            args: ['--no-sandbox','--disable-setuid-sandbox','--disable-blink-features=AutomationControlled']
         });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setExtraHTTPHeaders({'Accept-Language': 'en-US,en;q=0.9'});
 
-        // Set User Agent to avoid bot detection
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
+        let rawCount = '0';
 
-        let count = '0';
-
-        // --- SCRAPE INSTAGRAM ---
-        if (instaHandle) {
-            try {
-                await page.goto(`https://www.instagram.com/${instaHandle}/`, { waitUntil: 'domcontentloaded', timeout: 10000 });
-                const content = await page.content();
+        if(instaHandle){
+            try{
+                await page.goto(`https://www.instagram.com/${instaHandle}/`, {waitUntil:'networkidle2', timeout:30000});
                 
-                // Regex to find follower count in source code
-                let m = content.match(/"edge_followed_by":\{"count":(\d+)\}/);
-                if (!m) m = content.match(/meta\s+name="description"\s+content="([0-9.,KMB]+)\s+Followers/i);
-                
-                if (m) {
-                    count = m[1];
+                await page.mouse.move(Math.random()*100, Math.random()*100);
+                await delay(500);
+
+                const metaContent = await page.evaluate(() => {
+                    const meta = document.querySelector('meta[name="description"]');
+                    return meta ? meta.content : null;
+                });
+
+                if(metaContent){
+                    const match = metaContent.match(/^([0-9.,KMB]+)\s+Followers/i);
+                    if(match && match[1]) rawCount = match[1];
                 }
-            } catch (e) {
-                console.error(`IG Scrape failed for ${instaHandle}: ${e.message}`);
-            }
+                
+                if(rawCount === '0'){
+                     const pageText = await page.evaluate(() => document.body.innerText);
+                     const textMatch = pageText.match(/([0-9.,KMB]+)\s+followers/i);
+                     if(textMatch && textMatch[1]) rawCount = textMatch[1];
+                }
+            }catch(e){console.log(e.message);}
         }
 
-        // --- SCRAPE YOUTUBE (Only if IG didn't return a count, or logic depends on preference) ---
-        // Current logic: If IG fails or is empty, try YT. You can adjust to sum them if needed.
-        if (youtubeHandle && count === '0') {
-            try {
-                await page.goto(`https://www.youtube.com/@${youtubeHandle}`, { waitUntil: 'domcontentloaded', timeout: 10000 });
-                const content = await page.content();
-
-                let m = content.match(/"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([\d.,KMB]+)\s+subscribers"/);
-                if (!m) m = content.match(/([0-9.,KMB]+)\s+subscribers/i);
-                
-                if (m) {
-                    count = m[1];
-                }
-            } catch (e) {
-                console.error(`YT Scrape failed for ${youtubeHandle}: ${e.message}`);
-            }
+        if(youtubeHandle && rawCount === '0'){
+             try {
+                await page.goto(`https://www.youtube.com/@${youtubeHandle}`, {waitUntil:'domcontentloaded'});
+                const meta = await page.evaluate(() => document.querySelector('meta[name="description"]')?.content);
+                const match = meta?.match(/([0-9.,KMB]+)\s+subscribers/i);
+                if(match && match[1]) rawCount = match[1];
+            } catch(e){console.log(e.message);}
         }
 
-        await page.close();
-        return count;
+        await browser.close();
+        
+        // CONVERT "40M" -> "40000000"
+        const finalCount = parseCount(rawCount);
+        console.log(`Raw: ${rawCount} | Parsed: ${finalCount}`);
+        return finalCount;
 
     } catch (e) {
-        console.error('Critical Scraper Error:', e.message);
-        // If the browser crashes, reset the variable so it re-launches next time
-        if (browser) {
-            try { await browser.close(); } catch (err) {}
-            browser = null;
-        }
+        if (browser) await browser.close();
         return '0';
     }
 };

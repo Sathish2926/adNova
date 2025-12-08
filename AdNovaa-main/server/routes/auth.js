@@ -6,18 +6,16 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import upload from "../config/multerConfig.js"; 
 import { scrapeSocials } from "../utils/socialScraper.js"; 
-import sendEmail from '../utils/sendEmail.js';
 import jwt from 'jsonwebtoken';
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 
 // --- SIGNUP ROUTE ---
 router.post("/signup", async (req, res) => {
     try {
-        // Destructure all fields
         let { name, email, password, role, phone, ownerName, businessName } = req.body;
         
-        // --- FIX: If Business User, map 'businessName' to required 'name' field ---
         if (role === 'business' && !name && businessName) {
             name = businessName;
         }
@@ -28,8 +26,6 @@ router.post("/signup", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         let profileData = {};
-        
-        // --- SAVE SIGNUP DATA TO PROFILE IMMEDIATELY ---
         if (role === "business") {
             profileData.businessProfile = {
                 brandName: businessName || name, 
@@ -73,7 +69,6 @@ router.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-        // Update Social Stats on Login (Background Task)
         if (user.role === 'influencer') {
             const ig = user.influencerProfile?.instagramHandle;
             const yt = user.influencerProfile?.youtubeHandle;
@@ -109,7 +104,6 @@ router.post("/update-profile", async (req, res) => {
 
         const user = await User.findByIdAndUpdate(userId, updateQuery, { new: true });
 
-        // Trigger Scrape on Update if Handles Changed
         if (role === 'influencer') {
             const ig = profileData.instagramHandle;
             const yt = profileData.youtubeHandle;
@@ -132,43 +126,73 @@ router.post("/update-profile", async (req, res) => {
     }
 });
 
-router.post("/forgot-password", async (req, res) => {
+// --- FORGOT PASSWORD ---
+router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
 
     try {
         const user = await User.findOne({ email });
-        
-        // FIX 1: Check if user exists before accessing properties
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
 
-        // Generate a reset token (Valid for 10 minutes)
-        // Note: Ensure you have JWT_SECRET in your .env file, or it defaults to 'secret'
-        const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '10m' });
+        // Generate a token valid for 1 hour
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: "1h" });
 
-        // Create the reset URL (Point to your Frontend)
-        // Ensure CLIENT_URL is set in .env (e.g., https://your-app.onrender.com)
-        const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
-        const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+        // IMPORTANT: Ensure this matches your Frontend URL
+        const link = `http://localhost:5173/reset-password/${token}`;
 
-        // FIX 2: Define the message variable
-        const message = `You have requested a password reset. Please go to this link to reset your password:\n\n${resetUrl}\n\nThis link expires in 10 minutes.`;
-
-        await sendEmail({
-            email: user.email,
-            subject: 'Password Reset Request',
-            message: message
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
         });
 
-        res.status(200).json({ success: true, data: 'Email sent' });
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Reset Password Link',
+            text: `Click the following link to reset your password: ${link}`
+        };
 
-    } catch (err) {
-        console.error("Forgot Password Error:", err);
-        // FIX 3: Use res.status instead of next(error)
-        res.status(500).json({ success: false, message: "Email could not be sent" });
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ message: "Reset link sent to email" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
     }
 });
+
+// --- RESET PASSWORD (FIXED ROUTE) ---
+router.post("/reset-password/:token", async (req, res) => {
+    try {
+        // 1. Get token from URL Parameter
+        const { token } = req.params;
+        // 2. Get new password from Body
+        const { password } = req.body;
+        
+        if (!token) return res.status(400).json({ message: "Token missing" });
+        if (!password) return res.status(400).json({ message: "Password missing" });
+
+        // 3. Verify Token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        
+        // 4. Hash New Password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // 5. Update User
+        await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+        
+        res.json({ success: true, message: "Password updated successfully" });
+    } catch (err) {
+        console.error("Reset Password Error:", err.message);
+        res.status(500).json({ success: false, message: "Invalid or expired token" });
+    }
+});
+
 // --- UPLOAD IMAGE ---
 router.post("/upload-image", upload.single('image'), async (req, res) => {
     try {
