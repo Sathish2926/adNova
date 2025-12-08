@@ -3,14 +3,17 @@ import nodemailer from 'nodemailer';
 const sendEmail = async (options) => {
     try {
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,        // Changed from 587
+  secure: true,     // Changed from false. MUST be true for port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // These settings prevent hanging if Google blocks the IP
+  connectionTimeout: 10000, 
+  greetingTimeout: 5000,
+  socketTimeout: 10000
 });
         const message = {
             from: `AdNova Support <${process.env.EMAIL_USER}>`,
