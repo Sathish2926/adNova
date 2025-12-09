@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 
-const delay=(ms)=>new Promise(resolve=>setTimeout(resolve, ms));
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const parseCount = (str) => {
     if(!str) return '0';
@@ -11,10 +11,15 @@ const parseCount = (str) => {
     return Math.floor(num).toString();
 };
 
-export const scrapeSocials = async (instaHandle, youtubeHandle) => {
+// --- QUEUE VARIABLES ---
+const queue = [];
+let isProcessing = false;
+
+// --- INTERNAL SCRAPER (Your Original Logic) ---
+const performScrape = async (instaHandle, youtubeHandle) => {
     let browser = null;
     try {
-        console.log(`--- SCRAPING: ${instaHandle} ---`);
+        console.log(`--- PROCESSING QUEUE: ${instaHandle} ---`);
         
         browser = await puppeteer.launch({
             headless: "new",
@@ -38,7 +43,6 @@ export const scrapeSocials = async (instaHandle, youtubeHandle) => {
         if(instaHandle){
             try{
                 await page.goto(`https://www.instagram.com/${instaHandle}/`, {waitUntil:'networkidle2', timeout:30000});
-
 
                 const metaContent = await page.evaluate(() => {
                     const meta = document.querySelector('meta[name="description"]');
@@ -69,7 +73,6 @@ export const scrapeSocials = async (instaHandle, youtubeHandle) => {
 
         await browser.close();
         
-        // CONVERT "40M" -> "40000000"
         const finalCount = parseCount(rawCount);
         console.log(`Raw: ${rawCount} | Parsed: ${finalCount}`);
         return finalCount;
@@ -78,4 +81,36 @@ export const scrapeSocials = async (instaHandle, youtubeHandle) => {
         if (browser) await browser.close();
         return '0';
     }
+};
+
+// --- QUEUE PROCESSOR ---
+const processQueue = async () => {
+    // If we are already working, or the line is empty, stop.
+    if (isProcessing || queue.length === 0) return;
+
+    isProcessing = true;
+    const { instaHandle, youtubeHandle, resolve, reject } = queue.shift();
+
+    try {
+        const result = await performScrape(instaHandle, youtubeHandle);
+        resolve(result);
+    } catch (error) {
+        reject(error);
+    } finally {
+        isProcessing = false;
+        // Check if anyone else is waiting in line
+        processQueue();
+    }
+};
+
+// --- PUBLIC EXPORT (Wraps the request in the queue) ---
+export const scrapeSocials = (instaHandle, youtubeHandle) => {
+    return new Promise((resolve, reject) => {
+        // Add the request to the array
+        queue.push({ instaHandle, youtubeHandle, resolve, reject });
+        console.log(`Request added to queue. Current length: ${queue.length}`);
+        
+        // Try to start processing
+        processQueue();
+    });
 };
